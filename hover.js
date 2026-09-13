@@ -687,10 +687,12 @@ class HoverProvider {
                 else if (word != null) {
                         const matchedValue = this.commandJson.find(obj => obj["Friendly name"] === word);
                     
-                        return new vscode.Hover({
-                            language: "English",
-                            value: matchedValue.description
-                            });
+                        if(matchedValue) {                            
+                            return new vscode.Hover({
+                                language: "English",
+                                value: matchedValue.description
+                                });
+                        }
                     }
 
                 else {
