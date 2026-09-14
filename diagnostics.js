@@ -1,3 +1,5 @@
+const moddingCommands = require('./moddingCommands');
+
 const vscode = require('vscode');
 const fs = require('fs');
 
@@ -468,6 +470,10 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
 
 
     async analyzeDocument(document, diagnosticCollection, startValues) {
+        if(!document.uri.fsPath.endsWith('.dm')) {
+            return;
+        }
+
         const diagnostics = [];
 
         const lines = document.getText().split('\n');
@@ -475,16 +481,18 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
         this.checkFloatValues(lines, diagnostics);
         this.checkColorValues(lines,diagnostics);
 
-        const pattern = /(?:^|\n)+(#\S+)[ \t]*((?:"[^"]*")|(?:[^\s"]*))(?:[ \t]*(\S*))(?:[ \t]*?--[^\n]*)?\n*/g;
+        const pattern = /(?:^)+#([a-z_\d]+)[ \t]*((?:"[^"]*"))?[ \t]*([^\n]*)\n/gm;
         const statements = document.getText().matchAll(pattern);
 
         //Refactor all of this to new methods to avoid repeating the same standard values for repeat stuff like range or boost
 
-        let scanIndex = 0;
-        let currentLine = 0;
-        let lineIndex = 0;
         const text = document.getText()
 
+        let activeScope = "open";
+
+        let scanIndex = 0;
+        let lineIndex = 0;
+        let currentLine = 0;
         for(const statement of statements) {
             while(scanIndex <= statement.index) {
                 if(text[scanIndex] === '\n') {
@@ -493,282 +501,133 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
                 }
                 scanIndex++;
             }
-
+            const offset = scanIndex-lineIndex;
+            const startLine = currentLine;
             const commandRange = new vscode.Range(
-                new vscode.Position(currentLine, scanIndex-lineIndex),
-                new vscode.Position(currentLine, scanIndex-lineIndex + statement[1].length)
-            );
+                new vscode.Position(startLine, scanIndex-lineIndex-1),
+                new vscode.Position(startLine, scanIndex-lineIndex + statement[1].length)
+            );            
+            
+            while(scanIndex <= statement.index+ statement[0].length) {
+                if(text[scanIndex] === '\n') {
+                    currentLine++;
+                    lineIndex = scanIndex+1;
+                }
+                scanIndex++;
+            }
             const valueRange = new vscode.Range(
-                new vscode.Position(currentLine, scanIndex-lineIndex + statement[1].length + 1),
-                new vscode.Position(currentLine, scanIndex-lineIndex + statement[0].length)
+                new vscode.Position(startLine, offset + statement[1].length + 1),
+                new vscode.Position(currentLine, scanIndex-lineIndex-1)
             );
 
-            const parsedStatement = statement.map(value => {
+            const commandName = statement[1];
+
+            const stringPart = statement[2];
+            const withoutComment = statement[3].split("--")[0].trim();
+
+            let statementParams = [];
+            if(stringPart) {
+                statementParams.push(stringPart);
+                statementParams.push(withoutComment);
+            } else {
+                statementParams = withoutComment.split(" ");
+                while(statementParams.length < 2){
+                    statementParams.push("")
+                }
+            }
+
+            const parsedStatement = statementParams.map(value => {
                 const numericValue = /^-?\d+(\.\d+)?$/.test(value) ? parseFloat(value) : value;
                 return isNaN(numericValue) ? value : numericValue;
             });
 
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#newweapon', 1000, 3999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#newarmor', 300, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#newmonster', 5000, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#ressize', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#size', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#minsize', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#maxsize', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#montag', 1000, 100000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#researchlevel', 0, 9);
-            //make a custom checker for #path, needs two values, just check mod manual this is complicated cuz there's two #paths. will need to check for command after previous #end
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#selectnametype', 100, 399);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#newsite', 1700, 3999, true);
-            this.checkTwoCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#gems', 0, 8, 0, 99);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#level', 0, 4);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#selectnation', 5, 499);
-            //this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#victorycondition',null,null,false,true,[76,89]);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#fort', 1, 29);
-            this.checkTwoCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#magicskill', 0, 9, 1, 10, [50,51,52,53]);
-            // create a custom checker for #custommagic, needs two values 1st is path mask (from table 18) and 2nd is the chance (1 to 100)
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#mainpath', -1, 9);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#secondarypath', -1, 9);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#cluster', 1, 32000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#reconst', 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#firerange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#airrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#waterrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#earthrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#astralrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#deathrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#naturerange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#glamourrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#bloodrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#elementrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#sorceryrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#deathshock', 1, 50);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#deathslime', 1, 50);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#nightmareaura', 1, 50);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#falseregen', 1, 50);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#dread', 1, 50);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#undisleader', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#assencloc', 0, 7);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#extralives', 1, 50);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#startresearch', 1, 1000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#regainmount', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#skilledrider', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#mountiscom', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#bravemount', 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#smartmount', 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_gem', 0, 8);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathfire', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathglamour', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathwater', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathearth', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathastral', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathdeath', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathnature', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathglamour', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathblood', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathholy', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathfire', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathglamour', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathwater', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathearth', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathastral', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathdeath', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathnature', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathglamour', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathblood', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathholy', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nopathall', 1, 10);
-            this.checkPowerOfTwoValues(parsedStatement, commandRange, valueRange, diagnostics, '#dt_aff', 50, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#armor", 0, 1999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#selectarmor", 0, 1999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#copyarmor", 0, 999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#weapon", 0, 3999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#selectweapon", 0, 3999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#copyweapon", 0, 3999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#secondaryeffect", 0, 3999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#secondaryeffectalways", 0, 3999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#restricted", 0, 499);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#nationrebate", 0, 499);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#notfornation", 0, 499);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#nat", 0, 499);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#startitem", 0, 1999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#selectitem", 0, 1999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#copyitem", 0, 1999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#onebattlespell", 0, 1999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#selectspell", 0, 7999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#nextspell", 0, 7999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#selectsite", 0, 3999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#enchrebate50", 0, 101);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#enchrebate25p", 0, 101);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#enchrebate50p", 0, 101);
-            this.checkCustomRangeTwoSetsValues(parsedStatement, commandRange, valueRange, diagnostics, "#effect",0, 699, 10000, 10699);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_month", 1 , 12);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_targsight", 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#speedmult", 1, 3);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#localglobal", 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#worldvisible", 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#globallook", 1, 9);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#extramsg', 5, 499);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_nearbythrone', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_thronesite', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#aimagerec', 0, 99);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#holycost', 1, 15);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#norange", 0, 100,false,true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#att", -100, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#look", -1, 9);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#clumsy", 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#falsesupply", 0, 500);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#glamourmanip", 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#godsite", 0, 3999, true);
-            this.checkPowerOfTwoValues(parsedStatement, commandRange, valueRange, diagnostics, "#addgeo", 59);
-            this.checkPowerOfTwoValues(parsedStatement, commandRange, valueRange, diagnostics, "#remgeo", 59);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#danceweapon", 1, 3999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#dancenratt", 2, 50);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#holyifhit", -20, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#killmagicifhit", -20, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#killdemonifhit", -20, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#holystunifhit", 1, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#petrifyifhit", 1, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#fireifhit", -20, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#coldifhit", -20, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#shockifhit", -20, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#poisonifdmg", -20, 999);
-            this.checkValueRangeAndSet(parsedStatement, commandRange, valueRange, diagnostics, "#aftercloud", 1, 7, [1,8,64,512,4096,32768,262144,2097152,16777216])
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#aftercloudarea", 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#plaguedoctor", 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#notmounted", 1, 2);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#hidedom", 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#growthrecscale", 0, 5);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#deathrecscale", 0, 5);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#orderrecscale", 0, 5);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#chaosrecscale", 0, 5);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_enchnearby", 0, 9999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_targseductions", 0, 500);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_targminkills", 0, 1000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_targmaxkills", 0, 1000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_targmaxkills", 0, 1000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#addseduction", 0, 500);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#addkills", 0, 1000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_plane", -2, 8);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_godawake", 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_pretismnr", 0, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#req_pretawake", 0, 1);
-            this.checkQuotedTextLength(parsedStatement, commandRange, valueRange, diagnostics, "#msg",2399);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, "#icenatprot", -40, 40);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#holyrange', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#sorcerygems', 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#elementgems', 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#mobilearcher', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#animated', 0, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#domwar', -10, 10);
-            this.checkQuotedTextLength(parsedStatement, commandRange, valueRange, diagnostics, "#portent",2399);
-            this.checkQuotedTextLength(parsedStatement, commandRange, valueRange, diagnostics, "#cure",2399);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_void', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#onlyfriendlydst', 0, 2);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_kelp', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_gorge', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_deep', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_forestcave', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_deep', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_drip', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_crystal', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#clearvar', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#incvar', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#decvar', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#inc10var', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#dec10var', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#invvar', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#togglevar', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#gemlongevity', 0, 2);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#cavenation', 0, 3);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_minglobals', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_maxglobals', 1, 20);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_varpos', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_varneg', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_varzero', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_varone', -4, 9999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_arenadone ', 0, 1);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_worlditem ', 0, 1999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_noworlditem ', 0, 1999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#dispglobals', 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#aiassmod', -100, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#onlysitedst', -1, 1998, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#napbreakrit', -100, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_turnrare', -100, 100);
-            this.checkQuotedTextLength(parsedStatement, commandRange, valueRange, diagnostics, "#description", 1999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_targhorrormark', 1, 200);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#templeholypoints', 1, 10);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#mindcollar', 1, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#statstorm', 0, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#statbreak', 0, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_fortid', 1, 16);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#sumhealaffs', 1, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#spikes', 1, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#sleepres', -40, 40);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_school', 0, 7);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_path', 0, 9);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_minresearch', 0, 9);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_pathgems', 1, 999);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#bugshape', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#buguwshape', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#bugswarmshape', -100000, -1000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#bugswarmuwshape', -100000, -1000);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_targrealmnr', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#req_targnorealmnr', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#plainrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#plaincom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#plainfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#plainfortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#forestrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#forestcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#forestfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#forestfortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#mountainrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#mountaincom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#mountainfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#mountainfortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#swamprec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#swampcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#swampfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#swampfortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#wasterec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#wastecom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#wastefortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#wastefortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#farmrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#farmcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#farmfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#farmfortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#caverec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#cavecom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#cavefortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#cavefortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#driprec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#dripcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#dripfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#dripfortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#coastrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#coastcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#coastfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#coastfortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#searec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#seacom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#seafortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#seafortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#deeprec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#deepcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#deepfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#deepfortcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#kelprec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#kelpcom', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#kelpfortrec', 1, 19999, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#kelpfortcom', 1, 19999, true);
-            this.checkCustomRangeTwoSetsValues(parsedStatement, commandRange, valueRange, diagnostics, '#worldshape', 1, 19999, -100000, -1000, true);
-            this.checkCustomRangeTwoSetsValues(parsedStatement, commandRange, valueRange, diagnostics, '#battleshape', 1, 19999, -100000, -1000, true);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#reclimit ', -2, 100);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#caveinc ', 1, 500);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#caveres ', 1, 500);
-            this.checkCustomRangeValues(parsedStatement, commandRange, valueRange, diagnostics, '#caverecpt ', 1, 500);
+            if(commandName === "end") {
+                activeScope = "open"
+                continue;
+            }
+
+            const scopeCom = moddingCommands[activeScope];
+            if(!scopeCom) {
+                continue; //temp
+            }
+
+            const command = moddingCommands[activeScope][commandName];
+            if(!command) {
+                const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}: Command not recognised for ${activeScope} scope.`, vscode.DiagnosticSeverity.Error);
+                diagnostics.push(diagnostic);
+            } else {
+                if(command.startScope) {
+                    activeScope = command.startScope;
+                }
+
+                if(!command.parameters) {
+                    if(parsedStatement[0] !== "") {
+                        const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}: Command does not accept a parameter (${parsedStatement[0]}).`, vscode.DiagnosticSeverity.Error);
+                        diagnostics.push(diagnostic);
+                    }
+                } else {
+                    if(command.parameters.length < 2 && parsedStatement[1] !== "") {
+                        const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}: Command does not accept a second parameter (${parsedStatement[0]},${parsedStatement[1]}).`, vscode.DiagnosticSeverity.Error);
+                        diagnostics.push(diagnostic);
+                    }
+
+                    for(let j=0; j<command.parameters.length; j++) {
+                        const param = command.parameters[j]
+                        const paramArg = parsedStatement[j]
+                        
+                        if(paramArg === "") {
+                            if(!param.optional) {
+                                const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}, Parameter ${j+1}: Missing required parameter.`, vscode.DiagnosticSeverity.Error);
+                                diagnostics.push(diagnostic);
+                            }
+                            continue;
+                        }
+                        if(!param.allowString) {
+                            if(typeof paramArg !== 'number') {                                
+                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Must be a number.`, vscode.DiagnosticSeverity.Error);
+                                diagnostics.push(diagnostic);
+                                continue;
+                            }
+                        }
+                        if(param.fixedValues && param.range) {
+                            if((paramArg < param.range[0] || paramArg > param.range[1]) && !param.fixedValues.includes(paramArg)) {
+                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in the inclusive range ${param.range[0]} - ${param.range[1]} OR be one of ${param.fixedValues.join(', ')}.`, vscode.DiagnosticSeverity.Error);
+                                diagnostics.push(diagnostic);
+                                continue;
+                            }
+                        } else if(param.fixedValues) {
+                            if(!param.fixedValues.includes(paramArg)) {
+                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must be one of ${param.fixedValues.join(', ')}.`, vscode.DiagnosticSeverity.Error);
+                                diagnostics.push(diagnostic);
+                                continue;
+                            }
+                        } else if(param.range) {                            
+                            if(paramArg < param.range[0] || paramArg > param.range[1]) {                                
+                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in the inclusive range ${param.range[0]} - ${param.range[1]}.`, vscode.DiagnosticSeverity.Error);
+                                diagnostics.push(diagnostic);
+                                continue;
+                            }
+                        }
+                        if(param.bitmask) {
+                            //TODO
+                        }
+                        if(param.expectString) {
+                            if(typeof paramArg !== 'string') {                                
+                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Must be a string.`, vscode.DiagnosticSeverity.Error);
+                                diagnostics.push(diagnostic);
+                                continue;
+                            }
+                        }
+                        if(param.maxStringLength) {
+                            if(paramArg.length > param.maxStringLength) {
+                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: String length ${paramArg.length} exceeds the maximum (${param.maxStringLength}).`, vscode.DiagnosticSeverity.Error);
+                                diagnostics.push(diagnostic);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         //create monster diagnostics including transform and forcetransform
