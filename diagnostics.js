@@ -368,38 +368,37 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
 
         let activeScope = "open";
 
-        let scanIndex = 0;
-        let lineIndex = 0;
+        let scanIndex = 0; // character index of the scan position
+        let lineIndex = 0; // character index of the line
         let currentLine = 0;
         for(const statement of statements) {
-            while(scanIndex <= statement.index) {
-                if(text[scanIndex] === '\n') {
-                    currentLine++;
-                    lineIndex = scanIndex+1;
-                }
-                scanIndex++;
-            }
-            const offset = scanIndex-lineIndex;
-            const startLine = currentLine;
-            const commandRange = new vscode.Range(
-                new vscode.Position(startLine, scanIndex-lineIndex-1),
-                new vscode.Position(startLine, scanIndex-lineIndex + statement[1].length)
-            );            
-            
+            // calculate text ranges to emit diagnostics for
+            let startLine = currentLine;
+            let startLineIndex = lineIndex;
             while(scanIndex <= statement.index+ statement[0].length) {
                 if(text[scanIndex] === '\n') {
                     currentLine++;
                     lineIndex = scanIndex+1;
                 }
                 scanIndex++;
+
+                if(scanIndex == 1+statement.index) {
+                    startLine = currentLine;
+                    startLineIndex = lineIndex;
+                }
             }
+            const offset = 1+statement.index-startLineIndex;
+            const commandRange = new vscode.Range(
+                new vscode.Position(startLine, offset-1),
+                new vscode.Position(startLine, offset + statement[1].length)
+            );
             const valueRange = new vscode.Range(
                 new vscode.Position(startLine, offset + statement[1].length + 1),
                 new vscode.Position(currentLine, scanIndex-lineIndex-1)
             );
 
+            // extract command and params from statement string
             const commandName = statement[1];
-
             const stringPart = statement[2];
             const withoutComment = statement[3].split("--")[0].trim();
 
