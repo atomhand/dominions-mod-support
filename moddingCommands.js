@@ -57,7 +57,8 @@ const moddingCommands = {
         "domversion": {
             parameters: [
                 {
-                    allowFloat : true
+                    allowFloat : true,
+                    range: [6,7]
                 }
             ]
         },
@@ -204,6 +205,194 @@ const moddingCommands = {
         },    
         "clearallitems" : {
         },
+
+        // GENERAL MODDING
+        "poppergold": {
+            parameters: [
+                {
+                    range: [1,10000]
+                }
+            ]
+        },
+        "resourcemult": {
+            parameters: [
+                {
+                    range: [1,1000]
+                }
+            ]
+        },
+        "supplymult": {
+            parameters: [
+                {
+                    range: [1,1000]
+                }
+            ]
+        },
+        "unresthalfinc": {
+            parameters: [
+                {
+                    range: [1,1000]
+                }
+            ]
+        },
+        "unresthalfres": {
+            parameters: [
+                {
+                    range: [1,1000]
+                }
+            ]
+        },
+        "eventisrare": {
+            parameters: [
+                {
+                    range: [1,15]
+                }
+            ]
+        },
+        "turmoilincome": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "turmoilevents": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "deathincome": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "deathsupply": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "deathdeath": {
+            parameters: [
+                {
+                    range: [0,1000]
+                }
+            ]
+        },
+        "slothincome": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "slothresources": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "coldincome": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "coldsupply": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "tempscalecap": {
+            parameters: [
+                {
+                    range: [0,5]
+                }
+            ]
+        },
+        "misfortune": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "luckevents": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "researchscale": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        },
+        "startresearch": {
+            parameters: [
+                {
+                    range: [0,1000]
+                }
+            ]
+        },
+        "arenagold": {
+            parameters: [
+                {
+                    range: [0,9999]
+                }
+            ]
+        },
+        "arenagems": {
+            parameters: [
+                {
+                    range: [0,999]
+                }
+            ]
+        },
+        "gemlongevity": {
+            parameters: [
+                {
+                    range: [0,2]
+                }
+            ]
+        },
+
+        "selectpoptype" : {
+            startScope : "poptype",     
+            parameters: [
+                {
+                    range: [1,249]
+                }
+            ]
+        },
+        "newmerc" : {
+            startScope : "mercenary",
+        },
+        
+        "clearmercs" : {
+        },
+
+        "newtemplate" : {
+            startScope : "aitemplate",     
+            parameters: [
+                {
+                    nationNbr
+                }
+            ]
+
+        }
     },
     "sound" : {
         "sample": {
@@ -960,7 +1149,7 @@ const moddingCommands = {
         "rcost": {
             parameters: [
                 {
-                    range: [0,99999],
+                    range: [-9999,9999],
                 }
             ]
         },
@@ -1473,7 +1662,7 @@ const moddingCommands = {
         "woundfend": {
             parameters : [
                 {
-                    range : [0,99]
+                    range : [0,100]
                 },
             ],
         },
@@ -2272,7 +2461,7 @@ const moddingCommands = {
         "supplybonus": {
             parameters : [
                 {
-                    range : [0,999]
+                    range : [-999,999]
                 },
             ],
         },                      
@@ -2300,7 +2489,7 @@ const moddingCommands = {
         "resources": {
             parameters : [
                 {
-                    range : [0,999]
+                    range : [-999,999]
                 },
             ],
         },                       
@@ -7008,6 +7197,176 @@ const moddingCommands = {
         },
         "bestowtomount": {
         },
+    },
+    "poptype" : {        
+        "clearrec": {
+        },      
+        "cleardef": {
+        },
+        "addrecunit" : {
+            parameters : [
+                monsterParamsNoMontag
+            ]
+        },
+        "addreccom" : {
+            parameters : [
+                monsterParamsNoMontag
+            ]
+        },
+        "defcom1" : {
+            parameters : [
+                monsterParamsAcceptMontag
+            ]
+        },
+        "defunit1" : {
+            parameters : [
+                monsterParamsAcceptMontag
+            ]
+        },
+        "defunit1b" : {
+            parameters : [
+                monsterParamsAcceptMontag
+            ]
+        },
+        "defunit1c" : {
+            parameters : [
+                monsterParamsAcceptMontag
+            ]
+        },
+        "defmult1" : {
+            parameters : [
+                {
+                    range: [1,100]
+                }
+            ]
+        },
+        "defmult1b" : {
+            parameters : [
+                {
+                    range: [1,100]
+                }
+            ]
+        },
+        "defmult1c" : {
+            parameters : [
+                {
+                    range: [1,100]
+                }
+            ]
+        },
+    },
+    "mercenary" : {        
+        "name": {
+            parameters : [
+                nameParam
+            ]
+        },      
+        "level": {
+            parameters : [
+                { range : [0,2] }
+            ]
+        },     
+        "bossname": {
+            parameters : [
+                nameParam
+            ]
+        },     
+        "com": {
+            parameters : [
+                monsterParamsNoMontag
+            ]
+        },     
+        "unit": {
+            parameters : [
+                monsterParamsNoMontag
+            ]
+        },     
+        "nrunits": {
+            parameters : [
+                { range : [0,999] }
+            ]
+        },   
+        "minmen": {
+            parameters : [
+                { range : [0,999] }
+            ]
+        },   
+        "minpay": {
+            parameters : [
+                { range : [0,99999] }
+            ]
+        },   
+        "xp": {
+            parameters : [
+                { range : [0,999] }
+            ]
+        },   
+        "randequip": {
+            parameters : [
+                { range : [0,3] }
+            ]
+        },   
+        "recrate": {
+            parameters : [
+                { range : [0,99999] }
+            ]
+        },
+        "item": {
+            parameters : [
+                nameParam
+            ]
+        },     
+        "eramask": {
+            parameters : [
+                { range : [1,7] }
+            ]
+        },     
+    },    
+    "aitemplate" : {        
+        "form": {
+            parameters : [
+                nameParam
+            ]
+        },     
+        "prison": {
+            parameters : [
+                { range : [0,2] }
+            ]
+        },          
+        "magic": {
+            parameters : [
+                { range : [0,8] },
+                { range : [1,10] }
+            ]
+        },   
+        "domstr": {
+            parameters : [
+                { range : [1,10] }
+            ]
+        },          
+        "scale": {
+            parameters : [
+                { range : [0,5] },
+                { range : [-5,5] }
+            ]
+        },          
+        "bless": {
+            parameters : [
+                nameParam
+            ]
+        },         
+        "researchgoal": {
+            parameters : [
+                nameParam
+            ]
+        },        
+        "favrit": {
+            parameters : [
+                { range : [-1,6] },
+                { range : [-1,9] },
+                nameParam
+            ]
+        },                
     }
 }
 
