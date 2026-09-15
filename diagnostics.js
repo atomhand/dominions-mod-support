@@ -18,50 +18,6 @@ class ErrorDiagnosticProvider {
             return null;
         }
     }
-
-    /* separateCommand(inputString) {
-        // Exclude anything that follows "--" in the line
-        const lineWithoutComments = inputString.split('--')[0].trim();
-    
-        const pattern = /#(\S+(?:\s+\S+)*)/;
-        const match = lineWithoutComments.match(pattern);
-    
-        if (match) {
-            const values = match[1].split(/\s+/);
-    
-            // Convert numeric strings to numbers (floats or integers)
-            const parsedValues = values.map(value => {
-                const numericValue = parseFloat(value);
-                return isNaN(numericValue) ? value : numericValue;
-            });
-    
-            return parsedValues;
-        } else {
-            return [null];
-        }
-    } */
-
-    separateCommand(inputString) {
-        // Exclude anything that follows "--" in the line
-        const lineWithoutComments = inputString.split('--')[0].trim();
-    
-        const pattern = /#\S*\s+((?:"[^"]*")|(?:[^\s"]+))(?:\s*(\S*))/;
-        const match = lineWithoutComments.match(pattern);
-    
-        if (match) {
-            const values = match.slice(1);
-    
-            // Convert numeric strings to numbers (floats or integers)
-            const parsedValues = values.map(value => {
-                const numericValue = /^-?\d+(\.\d+)?$/.test(value) ? parseFloat(value) : value;
-                return isNaN(numericValue) ? value : numericValue;
-            });
-    
-            return parsedValues;
-        } else {
-            return [null];
-        }
-    }
     
     
     
@@ -102,99 +58,23 @@ class ErrorDiagnosticProvider {
             }
         }
     }
-    
-    checkFloatValues(lines, diagnostics) {
-        const exclusionCommands = ['#color', '#maptextcol', '#secondarycolor', '#version', '#domversion'];
-    
-        let insideQuotes = false;
-    
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-    
-            // Check if the line starts with any of the exclusion commands
-            if (exclusionCommands.some(command => line.startsWith(command))) {
-                continue;
-            }
-    
-            let lineWithoutComment = line;
-            const commentIndex = line.indexOf('--');
-            if (commentIndex !== -1) {
-                lineWithoutComment = line.substring(0, commentIndex).trim();
-            }
-    
-            let lineWithoutQuotes = '';
-            for (let j = 0; j < lineWithoutComment.length; j++) {
-                const char = lineWithoutComment[j];
-                if (char === '"') {
-                    insideQuotes = !insideQuotes;
-                }
-                if (!insideQuotes) {
-                    lineWithoutQuotes += char;
-                }
-            }
-    
-            const words = lineWithoutQuotes.split(/\s+/);
-            for (const word of words) {
-                // Check if the word contains a period (.) indicating a potential floating-point number
-                if (/\d+\./.test(lineWithoutQuotes)) {
-                    const range = new vscode.Range(
-                        new vscode.Position(i, line.indexOf(word)),
-                        new vscode.Position(i, line.indexOf(word) + word.length)
-                    );
-                    const diagnostic = new vscode.Diagnostic(
-                        range,
-                        'Floating-point value found',
-                        vscode.DiagnosticSeverity.Error
-                    );
-                    diagnostics.push(diagnostic);
-                }
-            }
-        }
-    }
-    
 
-    checkColorValues(lines, diagnostics) {
-        const colorCommands = ['#color', '#maptextcol', '#secondarycolor'];
-    
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-    
-            for (const command of colorCommands) {
-                if (line.startsWith(command)) {
-                    const valueMatches = line.match(/(\d+\.\d+)/g);
-    
-                    if (valueMatches && valueMatches.length === 3) {
-                        const values = valueMatches.map(match => parseFloat(match));
-                        const isValid = values.every(value => value >= 0.0 && value <= 1.0);
-    
-                        if (!isValid) {
-                            const range = new vscode.Range(
-                                new vscode.Position(i, line.indexOf(valueMatches[0])),
-                                new vscode.Position(i, line.indexOf(valueMatches[2]) + valueMatches[2].length)
-                            );
-                            const diagnostic = new vscode.Diagnostic(
-                                range,
-                                `Values for ${command} should be between 0.0 and 1.0`,
-                                vscode.DiagnosticSeverity.Error
-                            );
-                            diagnostics.push(diagnostic);
-                        }
-                    } else {
-                        const range = new vscode.Range(
-                            new vscode.Position(i, line.indexOf(command)),
-                            new vscode.Position(i, line.indexOf(command) + command.length)
-                        );
-                        const diagnostic = new vscode.Diagnostic(
-                            range,
-                            `Invalid or missing values for ${command} command`,
-                            vscode.DiagnosticSeverity.Error
-                        );
-                        diagnostic.code = 'show-hover';
-                        diagnostics.push(diagnostic);
-                    }
-                    break; // No need to continue checking after a match
-                }
+    getNumber(str, allowFloat) {
+        // regex : is the entire string a number (decimal allowed)
+        if(!/^-?\d+\.?\d*$/.test(str)) {
+            // must be number
+            return null
+        // regex: is the string an integer
+        } else if (!allowFloat && !/^-?\d+$/.test(str)) {
+            // must be integer
+            return null
+        } else {
+            const num = parseFloat(str)
+            if(isNaN(num)) {
+                // must be valid number
+                return null
             }
+            return num
         }
     }
 
@@ -478,8 +358,6 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
 
         const lines = document.getText().split('\n');
         this.checkMissingEnd(lines, diagnostics, startValues);
-        this.checkFloatValues(lines, diagnostics);
-        this.checkColorValues(lines,diagnostics);
 
         const pattern = /(?:^)+#([a-z_\d]+)[ \t]*((?:"[^"]*"))?[ \t]*([^\n]*)\n/gm;
         const statements = document.getText().matchAll(pattern);
@@ -528,18 +406,12 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
             let statementParams = [];
             if(stringPart) {
                 statementParams.push(stringPart);
-                statementParams.push(withoutComment);
-            } else {
-                statementParams = withoutComment.split(" ");
-                while(statementParams.length < 2){
-                    statementParams.push("")
+            }
+            if(withoutComment.length > 0) {                
+                for(const part of withoutComment.split(" ")) {
+                    statementParams.push(part.trim());
                 }
             }
-
-            const parsedStatement = statementParams.map(value => {
-                const numericValue = /^-?\d+(\.\d+)?$/.test(value) ? parseFloat(value) : value;
-                return isNaN(numericValue) ? value : numericValue;
-            });
 
             if(commandName === "end") {
                 activeScope = "open"
@@ -561,68 +433,80 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
                 }
 
                 if(!command.parameters) {
-                    if(parsedStatement[0] !== "") {
-                        const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}: Command does not accept a parameter (${parsedStatement[0]}).`, vscode.DiagnosticSeverity.Error);
+                    if(statementParams.length > 0) {
+                        const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}: Command does not accept a parameter.`, vscode.DiagnosticSeverity.Error);
                         diagnostics.push(diagnostic);
                     }
                 } else {
-                    if(command.parameters.length < 2 && parsedStatement[1] !== "") {
-                        const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}: Command does not accept a second parameter (${parsedStatement[0]},${parsedStatement[1]}).`, vscode.DiagnosticSeverity.Error);
+                    if(command.parameters.length < statementParams.length) {
+                        const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}: Command only accepts ${command.parameters.length} parameters (found ${statementParams.length}).`, vscode.DiagnosticSeverity.Error);
                         diagnostics.push(diagnostic);
                     }
 
                     for(let j=0; j<command.parameters.length; j++) {
                         const param = command.parameters[j]
-                        const paramArg = parsedStatement[j]
+                        const paramArg = statementParams[j]
                         
-                        if(paramArg === "") {
+                        if(paramArg === null || paramArg === "") {
                             if(!param.optional) {
                                 const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}, Parameter ${j+1}: Missing required parameter.`, vscode.DiagnosticSeverity.Error);
                                 diagnostics.push(diagnostic);
                             }
                             continue;
                         }
-                        if(!param.allowString) {
-                            if(typeof paramArg !== 'number') {                                
-                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Must be a number.`, vscode.DiagnosticSeverity.Error);
-                                diagnostics.push(diagnostic);
-                                continue;
+                        
+                        const paramNum = this.getNumber(paramArg, param.allowFloat);
+
+                        if(paramNum === null) {
+                            // is a string
+                            if(!param.allowString) { 
+                                if(param.allowFloat) {                          
+                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Must be a floating point number.`, vscode.DiagnosticSeverity.Error);
+                                    diagnostics.push(diagnostic);
+                                    continue;
+                                } else {                          
+                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Must be an integer.`, vscode.DiagnosticSeverity.Error);
+                                    diagnostics.push(diagnostic);
+                                    continue;
+                                }
                             }
-                        }
-                        if(param.fixedValues && param.range) {
-                            if((paramArg < param.range[0] || paramArg > param.range[1]) && !param.fixedValues.includes(paramArg)) {
-                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in the inclusive range ${param.range[0]} - ${param.range[1]} OR be one of ${param.fixedValues.join(', ')}.`, vscode.DiagnosticSeverity.Error);
-                                diagnostics.push(diagnostic);
-                                continue;
+                            
+                            if(param.maxStringLength) {
+                                if(paramArg.length > param.maxStringLength) {
+                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: String length ${paramArg.length} exceeds the maximum (${param.maxStringLength}).`, vscode.DiagnosticSeverity.Error);
+                                    diagnostics.push(diagnostic);
+                                    continue;
+                                }
                             }
-                        } else if(param.fixedValues) {
-                            if(!param.fixedValues.includes(paramArg)) {
-                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must be one of ${param.fixedValues.join(', ')}.`, vscode.DiagnosticSeverity.Error);
-                                diagnostics.push(diagnostic);
-                                continue;
-                            }
-                        } else if(param.range) {                            
-                            if(paramArg < param.range[0] || paramArg > param.range[1]) {                                
-                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in the inclusive range ${param.range[0]} - ${param.range[1]}.`, vscode.DiagnosticSeverity.Error);
-                                diagnostics.push(diagnostic);
-                                continue;
-                            }
-                        }
-                        if(param.bitmask) {
-                            //TODO
-                        }
-                        if(param.expectString) {
-                            if(typeof paramArg !== 'string') {                                
+                        } else {
+                            // is not a string
+                            if(param.expectString) {              
                                 const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Must be a string.`, vscode.DiagnosticSeverity.Error);
                                 diagnostics.push(diagnostic);
                                 continue;
                             }
-                        }
-                        if(param.maxStringLength) {
-                            if(paramArg.length > param.maxStringLength) {
-                                const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: String length ${paramArg.length} exceeds the maximum (${param.maxStringLength}).`, vscode.DiagnosticSeverity.Error);
-                                diagnostics.push(diagnostic);
-                                continue;
+
+                            if(param.fixedValues && param.range) {
+                                if((paramNum < param.range[0] || paramNum > param.range[1]) && !param.fixedValues.includes(paramNum)) {
+                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in the inclusive range ${param.range[0]} - ${param.range[1]} OR be one of ${param.fixedValues.join(', ')}.`, vscode.DiagnosticSeverity.Error);
+                                    diagnostics.push(diagnostic);
+                                    continue;
+                                }
+                            } else if(param.fixedValues) {
+                                if(!param.fixedValues.includes(paramNum)) {
+                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must be one of ${param.fixedValues.join(', ')}.`, vscode.DiagnosticSeverity.Error);
+                                    diagnostics.push(diagnostic);
+                                    continue;
+                                }
+                            } else if(param.range) {                            
+                                if(paramNum < param.range[0] || paramNum > param.range[1]) {                                
+                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in the inclusive range ${param.range[0]} - ${param.range[1]}.`, vscode.DiagnosticSeverity.Error);
+                                    diagnostics.push(diagnostic);
+                                    continue;
+                                }
+                            }
+                            if(param.bitmask) {
+                                //TODO
                             }
                         }
                     }
