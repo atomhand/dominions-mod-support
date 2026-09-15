@@ -136,7 +136,7 @@ const moddingCommands = {
             ]
         },
         "selectsound": {
-            startScope: "sond",
+            startScope: "sound",
             parameters: [
                 {
                     range: [0,248]
@@ -176,6 +176,20 @@ const moddingCommands = {
         },
         "disableoldnations" : {
         },
+        "clearallspells" : {
+        },
+        "selectspell": {
+            startScope: "spell",
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,3999]
+                }
+            ]
+        },
+        "newspell": {
+            startScope: "spell",
+        },        
     },
     "sound" : {
         "sample": {
@@ -6144,6 +6158,528 @@ const moddingCommands = {
         },
         "ghostreanim" : {
         },
+    },
+    "spell" : {        
+        "clear": {
+        },
+        "copyspell": {
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,3999]
+                }
+            ]
+        },
+        "name": {
+            parameters: [
+                nameParam
+            ]
+        },
+        "descr": {
+            parameters: [
+                nameParam
+            ]
+        },
+        "details": {
+            parameters: [
+                nameParam
+            ]
+        },
+        "school": {
+            parameters: [
+                {
+                    range : [-1,7]
+                }
+            ]
+        },
+        "researchlevel": {
+            parameters: [
+                {
+                    range : [0,9]
+                }
+            ]
+        },
+        "path": {
+            parameters: [
+                {
+                    range : [0,1]
+                },                
+                {
+                    range : [-1,9]
+                }
+            ]
+        },
+        "pathlevel": {
+            parameters: [
+                {
+                    range : [0,1]
+                },                
+                {
+                    range : [0,9]
+                }
+            ]
+        },
+        "fatiguecost": {
+            parameters: [
+                {
+                    range : [1,100000]
+                },
+            ]
+        },
+        // spell effects
+        
+        "aoe": {
+            parameters: [
+                {
+                    range : [0,100000]
+                },
+            ]
+        },
+        "damage": {
+            parameters: [
+                {
+                    range : [-100000,100000]
+                },
+            ]
+        },
+        "damagemon": {
+            parameters: [
+                {
+                    allowString : true,
+                    expectString : true,
+                },
+            ]
+        },
+        "nextspell": {
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,3999]
+                }
+            ]
+        },
+        "nextingeo": {
+            parameters: [
+                {
+                    bitmask : true
+                }
+            ]
+        },
+        "effect": {
+            parameters: [
+                {
+                    range: [0,10699]
+                }
+            ]
+        },        
+        "nreff": {
+            parameters: [
+                {
+                    range: [1,99999]
+                }
+            ]
+        },      
+        "range": {
+            parameters: [
+                {
+                    range: [0,99999]
+                }
+            ]
+        },      
+        "prec": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        },   
+        "flightspr": {
+            parameters: [
+                {
+                    range: [-1,10400],
+                },
+            ]
+        },
+        "explspr": {
+            parameters: [
+                {
+                    range: [10001,10317],
+                    fixedValues: [-1]
+                }
+            ]
+        },
+        "sound": {
+            parameters: [
+                {
+                    range: [0,248]
+                }
+            ]
+        },
+        "strikesound": {
+            parameters: [
+                {
+                    range: [0,248]
+                }
+            ]
+        },
+        "sample": {
+            parameters: [
+                pathParam
+            ]
+        },
+        "speedmult": {
+            parameters: [
+                {
+                    range: [1,3],
+                }
+            ]
+        },
+        "makecrater": {
+            parameters: [
+                {
+                    range: [0,1],
+                }
+            ]
+        },
+
+        // targeting        
+        "provrange": {
+            parameters: [
+                {
+                    range: [0,99],
+                }
+            ]
+        },      
+        "onlygeosrc": {
+            parameters: [
+                {
+                    bitmask : true
+                }
+            ]
+        },      
+        "onlygeodst": {
+            parameters: [
+                {
+                    bitmask : true
+                }
+            ]
+        },      
+        "nogeodst": {
+            parameters: [
+                {
+                    bitmask : true
+                }
+            ]
+        },      
+        "onlycoastsrc": {
+            parameters: [
+                {
+                    range: [0,1]
+                }
+            ]
+        },  
+        "onlyatsite": {
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,3999]
+                }
+            ]
+        },
+        "onlysitedst": {
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,3999]
+                }
+            ]
+        }, 
+        "onlyfriendlydst": {
+            parameters: [
+                {
+                    range: [0,2]
+                }
+            ]
+        }, 
+        "onlyowndst": {
+            parameters: [
+                {
+                    range: [0,1]
+                }
+            ]
+        },
+        "nowatertrace": {
+            parameters: [
+                {
+                    range: [0,1]
+                }
+            ]
+        },
+        "nolandtrace": {
+            parameters: [
+                {
+                    range: [0,1]
+                }
+            ]
+        },
+        "walkable": {
+            parameters: [
+                {
+                    range: [0,1]
+                }
+            ]
+        },
+
+        // special attributes
+        "spec": {
+            parameters: [
+                {
+                    bitmask : true
+                }
+            ]
+        },
+        "spec2": {
+            parameters: [
+                {
+                    bitmask : true
+                }
+            ]
+        },
+        "restricted": {
+            parameters: [
+                {
+                    allowString : true,
+                    range : [0,500]
+                }
+            ]
+        },
+        "notfornation": {
+            parameters: [
+                {
+                    allowString : true,
+                    range : [0,500]
+                }
+            ]
+        },
+        "homerealm": {
+            parameters: [
+                {
+                    range : [1,10]
+                }
+            ]
+        },
+        "farsumcom": {
+            parameters: [
+                monsterParamsNoMontag
+            ]
+        },
+        "casttime": {
+            parameters: [
+                {
+                    range : [1,1000]
+                }
+            ]
+        },
+        "godpathspell": {
+            parameters: [
+                {
+                    range : [-1,7]
+                }
+            ]
+        },
+        "friendlyench": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "hiddenench": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "nocastmindless": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "spellreqfly": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "onlymnr": {
+            monsterParamsAcceptMontag
+        },
+        "notmnr": {
+            monsterParamsAcceptMontag
+        },
+        "polygetmagic": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "maxbounces": {
+            parameters: [
+                {
+                    range : [0,100]
+                }
+            ]
+        },
+        "sethome": {
+        },
+        "reqsun": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "dispimmune": {
+            parameters: [
+                {
+                    range : [0,2]
+                }
+            ]
+        },
+        "napbreakrit": {
+            parameters: [
+                {
+                    range : [-1,1]
+                }
+            ]
+        },
+        "sumhealaffs": {
+            parameters: [
+                {
+                    range : [0,99]
+                }
+            ]
+        },
+        "notindoors": {
+            parameters: [
+                {
+                    range : [-1,1]
+                }
+            ]
+        },
+        "sizecost": {
+            parameters: [
+                {
+                    range : [-99,99]
+                }
+            ]
+        },
+        "twiceborncost": {
+            parameters: [
+                {
+                    range : [-99,99]
+                }
+            ]
+        },
+
+        // global enchantments
+        "localglobal": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "worldvisible": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "globallook": {
+            parameters: [
+                {
+                    range : [1,9]
+                }
+            ]
+        },
+        "portent": {
+            parameters: [
+                {
+                    allowString : true,
+                    expectString : true,
+                }
+            ]
+        },
+        "cure": {
+            parameters: [
+                {
+                    allowString : true,
+                    expectString : true,
+                }
+            ]
+        },
+
+        // rare caster requirements        
+        "reqspellsinger": {
+        },    
+        "reqtaskmaster": {
+        },    
+        "reqseduce": {
+        },    
+        "reqplant": {
+        },    
+        "reqnospellsinger": {
+        },
+        "reqnotaskmaster": {
+        },
+        "reqnoseduce": {
+        },
+        "reqnoplant": {
+        },
+
+        // spell ai hints
+        
+        "ainocast": {
+            parameters: [
+                {
+                    range : [0,1]
+                }
+            ]
+        },
+        "aibadlvl": {
+            parameters: [
+                {
+                    range : [1,10]
+                }
+            ]
+        },
+        "aispellmod": {
+            parameters: [
+                {
+                    range : [-100,1000]
+                }
+            ]
+        },
+        "aiassmod": {
+            parameters: [
+                {
+                    range : [-100,1000]
+                }
+            ]
+        },
+
+
+
+
+
+
     }
 }
 
