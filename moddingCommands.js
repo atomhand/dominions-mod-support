@@ -189,7 +189,21 @@ const moddingCommands = {
         },
         "newspell": {
             startScope: "spell",
-        },        
+        },    
+        "newitem": {
+            startScope: "item",
+        },      
+        "selectitem": {
+            startScope: "item",
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,1999]
+                }
+            ]
+        },    
+        "clearallitems" : {
+        },
     },
     "sound" : {
         "sample": {
@@ -3253,15 +3267,16 @@ const moddingCommands = {
             ],
         }, 
         "magicboost": {
-            parameters : [
+            parameters: [
                 {
-                    range : [0,53]
+                    range: [0,9],
+                    fixedValues: [51,52,53]
                 },
                 {
-                    range : [-5,5]
-                },
-            ],
-        }, 
+                    range: [-5,5]
+                }
+            ]
+        },
         "masterrit": {
             parameters : [
                 {
@@ -3984,23 +3999,17 @@ const moddingCommands = {
         },
         "homemon" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "mon" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "com" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "nat" : {
@@ -4012,44 +4021,32 @@ const moddingCommands = {
         },
         "natmon" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "natcom" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "summon" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "summonlv2" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "summonlv3" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "summonlv4" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },      
         "voidgate" : {
@@ -4061,16 +4058,12 @@ const moddingCommands = {
         },
         "wallcom" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "wallunit" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "wallmult" : {
@@ -4082,9 +4075,7 @@ const moddingCommands = {
         },
         "uwwallunit" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "uwwallmult" : {
@@ -4096,9 +4087,7 @@ const moddingCommands = {
         },
         "uwwallcom" : {
             parameters: [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "defcom" : {
@@ -4895,397 +4884,287 @@ const moddingCommands = {
         },
         "startcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "addforeignunit" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "addforeigncom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
 
          
         "plainrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "forestrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "mountainrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "swamprec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "wasterec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "farmrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "caverec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "driprec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "coastrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "searec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "deeprec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "kelprec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
 
         
         "plainfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "forestfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "mountainfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "swampfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "wastefortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "farmfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "cavefortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "dripfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "coastfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "seafortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "deepfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "kelpfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "foreignfortrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
 
         "startscout" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
 
         "plaincom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "forestcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "mountaincom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "swampcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "wastecom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "farmcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "cavecom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "dripcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "coastcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "seacom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "deepcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "kelpcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
 
         
         "plainfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "forestfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "mountainfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "swampfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "wastefortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "farmfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "cavefortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "dripfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "coastfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "seafortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "deepfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "kelpfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "foreignfortcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
 
         
         "startunittype1" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "startunitnbrs1" : {
@@ -5297,9 +5176,7 @@ const moddingCommands = {
         },
         "startunittype2" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "startunitnbrs2" : {
@@ -5312,44 +5189,32 @@ const moddingCommands = {
 
         "addrecunit" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "addreccom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "uwrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "uwcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "landrec" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "landcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },        
         "merccost" : {
@@ -5486,58 +5351,42 @@ const moddingCommands = {
         
         "defcom1" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "defcom2" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "defunit1" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "defunit1b" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "defunit1c" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "defunit1d" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "defunit2" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "defunit2b" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "defmult1" : {
@@ -5586,16 +5435,12 @@ const moddingCommands = {
         
         "wallcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "wallunit" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "wallmult" : {
@@ -5607,16 +5452,12 @@ const moddingCommands = {
         },
         "guardcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "guardunit" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "guardmult" : {
@@ -5628,16 +5469,12 @@ const moddingCommands = {
         },
          "foreignwallcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "foreignwallunit" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "foreignwallmult" : {
@@ -5649,16 +5486,12 @@ const moddingCommands = {
         },
         "foreignguardcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "foreignguardunit" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "foreignguardmult" : {
@@ -5678,58 +5511,42 @@ const moddingCommands = {
 
         "uwdefcom1" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "uwdefcom2" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "uwdefunit1" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "uwdefunit1b" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "uwdefunit1c" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "uwdefunit1d" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "uwdefunit2" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "uwdefunit2b" : {
             parameters : [
-                {
-                    monsterParamsAcceptMontag
-                }
+                monsterParamsAcceptMontag
             ]
         },
         "uwdefmult1" : {
@@ -5778,9 +5595,7 @@ const moddingCommands = {
         
         "uwwallunit" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "uwwallmult" : {
@@ -5792,9 +5607,7 @@ const moddingCommands = {
         },
         "uwwallcom" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
 
@@ -5802,9 +5615,7 @@ const moddingCommands = {
         },
         "addgod" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },
         "homerealm" : {
@@ -5818,9 +5629,7 @@ const moddingCommands = {
         },
         "delgod" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },        
         "likespop" : {
@@ -5834,9 +5643,7 @@ const moddingCommands = {
         },        
         "cheapgod20" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },  
         "uwbuild" : {
@@ -5848,9 +5655,7 @@ const moddingCommands = {
         },  
         "cheapgod40" : {
             parameters : [
-                {
-                    monsterParamsNoMontag
-                }
+                monsterParamsNoMontag
             ]
         },  
         "blessbonus" : {
@@ -6286,7 +6091,7 @@ const moddingCommands = {
                 }
             ]
         },      
-        "prec": {
+        "precision": {
             parameters: [
                 {
                     range: [-100,100]
@@ -6516,10 +6321,10 @@ const moddingCommands = {
             ]
         },
         "onlymnr": {
-            monsterParamsAcceptMontag
+            parameters : [ monsterParamsAcceptMontag ]
         },
         "notmnr": {
-            monsterParamsAcceptMontag
+            parameters : [ monsterParamsAcceptMontag ]
         },
         "polygetmagic": {
             parameters: [
@@ -6674,13 +6479,809 @@ const moddingCommands = {
                 }
             ]
         },
+    },
+    "item" : {        
+        "clear" : {
+        },
+        "constlevel": {
+            parameters: [
+                {
+                    fixedValues : [1,3,5,7,9,11,13,15]
+                }
+            ]
+        },
+        "mainpath": {
+            parameters: [
+                {
+                    range : [0,8]
+                }
+            ]
+        },
+        "mainlevel": {
+            parameters: [
+                {
+                    range : [1,8]
+                }
+            ]
+        },
+        "secondarypath": {
+            parameters: [
+                {
+                    range : [-1,8]
+                }
+            ]
+        },
+        "secondarylevel": {
+            parameters: [
+                {
+                    range : [1,8]
+                }
+            ]
+        },    
+        "copyitem": {
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,1999]
+                }
+            ]
+        },      
+        "copyspr": {
+            parameters: [
+                {
+                    range: [0,1999]
+                }
+            ]
+        },       
+        "spr": {
+            parameters: [
+                pathParam
+            ]
+        },     
+        "type": {
+            parameters: [
+                {
+                    range: [1,10]
+                }
+            ]
+        },           
+        "name": {
+            parameters: [
+                nameParam
+            ]
+        },               
+        "descr": {
+            parameters: [
+                nameParam
+            ]
+        },     
+        "weapon": {
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,3999]
+                }
+            ]
+        },
+        "armor": {
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,999]
+                }
+            ]
+        },  
 
+        "magicboost": {
+            parameters: [
+                {
+                    range: [0,9],
+                    fixedValues: [51,52,53]
+                },
+                {
+                    range: [-5,5]
+                }
+            ]
+        },
+        "pen": {
+            parameters: [
+                {
+                    range: [0,10] // negative value allowed??
+                }
+            ]
+        },  
+        "spell": {
+            parameters: [
+                {
+                    allowString : true,
+                    expectString : true
+                }
+            ]
+        },  
+        "autospell": {
+            parameters: [
+                {
+                    allowString : true,
+                    expectString : true
+                }
+            ]
+        },  
+        "autospellrepeat": {
+            parameters: [
+                {
+                    range: [1,10]
+                }
+            ]
+        },  
+        "randomspell": {
+            parameters: [
+                {
+                    range: [1,100]
+                }
+            ]
+        },  
+        
+        "hp": {
+            parameters: [
+                {
+                    range: [-999,999]
+                }
+            ]
+        },  
+        "str": {
+            parameters: [
+                {
+                    range: [-999,999]
+                }
+            ]
+        },  
+        "att": {
+            parameters: [
+                {
+                    range: [-999,999]
+                }
+            ]
+        },  
+        "def": {
+            parameters: [
+                {
+                    range: [-999,999]
+                }
+            ]
+        },  
+        "prec": {
+            parameters: [
+                {
+                    range: [-999,999]
+                }
+            ]
+        },  
+        "mr": {
+            parameters: [
+                {
+                    range: [-999,999]
+                }
+            ]
+        },  
+        "luck": {
+        },  
+        "morale": {
+            parameters: [
+                {
+                    range: [-999,999]
+                }
+            ]
+        },  
+        "quickness": {
+        },  
+        "voidsanity": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "bless": {
+        },   
+        "fireres": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "coldres": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "acidres": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "decayres": {
+            parameters: [
+                {
+                    range: [0,1]
+                }
+            ]
+        }, 
+        "barkskin": {
+        }, 
+        "shockres": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "poisonres": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "stoneskin": {
+        }, 
+        "ironskin": {
+        }, 
+        "bers": {
+        }, 
+        "extralife": {
+        }, 
+        "guardspiritbonus": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "limitedregen": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        }, 
+        "enchantedblood": {
+            parameters: [
+                {
+                    range: [0,100]
+                }
+            ]
+        }, 
+        "polyimmune": {
+        }, 
+        "autobless": {
+        }, 
+        "mapspeed": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "waterbreathing": {
+        }, 
+        "float": {
+        }, 
+        "fly": {
+        }, 
+        "stormimmune": {
+        }, 
+        "run": {
+        }, 
+        "sneakunit": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "stealthboost": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
+        "swift": {
+            parameters: [
+                {
+                    range: [-100,100]
+                }
+            ]
+        }, 
 
+        // restrictions
+        "reqeyes": {
+        }, 
+        "restricted": {
+            parameters : [
+                {
+                    allowString : true,
+                    range : [-1,500]
+                }
+            ]
+        }, 
+        "nofind": {
+        }, 
+        "notfornation": {
+            parameters : [
+                {
+                    allowString : true,
+                    range : [0,500]
+                }
+            ]
+        }, 
+        "restricteditem": {
+            parameters : [
+                {
+                    range : [1,10000]
+                }
+            ]
+        }, 
+        "nationrebate": {
+            parameters : [
+                {
+                    allowString : true,
+                    range : [-1,500]
+                }
+            ]
+        }, 
+        "run": {
+        }, 
+        "noforgebonus": {
+        }, 
+        "islance": {
+        }, 
+        "minsize": {
+            parameters : [
+                {
+                    range : [1,10]
+                }
+            ]
+        }, 
+        "maxsize": {
+            parameters : [
+                {
+                    range : [1,10]
+                }
+            ]
+        }, 
+        "unique": {
+        }, 
+        "heavyitem": {
+            parameters : [
+                {
+                    range : [0,1]
+                }
+            ]
+        }, 
 
+        // curses & afflictions
+        
+        "tainted": {
+            parameters : [
+                {
+                    range : [0,100]
+                }
+            ]
+        }, 
+        "cursed": {
+        },
+        "nomounted": {
+        },
+        "curse": {
+        },
+        "nocoldblood": {
+        },
+        "disease": {
+        },
+        "nodemon": {
+        },
+        "chestwound": {
+        },
+        "noundead": {
+        },
+        "noinanim": {
+        },
+        "noimmobile": {
+        },
+        "nofemale": {
+        },
+        "feeblemind": {
+        },
+        "mute": {
+        },
+        "onlymounted": {
+        },
+        "onlycoldblood": {
+        },
+        "nhwound": {
+        },
+        "onlydemon": {
+        },
+        "crippled": {
+        },
+        "onlyundead": {
+        },
+        "loseeye": {
+        },
+        "onlyinanim": {
+        },
+        "onlyimmobile": {
+        },
+        "onlyfemale": {
+        },
+        "recuperation": {
+        },
+        "yearaging": {
+            parameters : [
+                {
+                    range : [0,100]
+                }
+            ]
+        },
+        "noaging": {
+            parameters : [
+                {
+                    range : [0,100]
+                }
+            ]
+        },
+        "noagingland": {
+            parameters : [
+                {
+                    range : [0,100]
+                }
+            ]
+        },
+         
+        "danceweapon": {
+            parameters: [
+                {
+                    allowString : true,
+                    range: [0,3999]
+                }
+            ]
+        }, 
+        "dancenratt": {
+            parameters: [
+                {
+                    range: [2,20]
+                }
+            ]
+        },
+        "dancespr": {
+            parameters: [
+                {
+                    range: [-1,10400],
+                },
+            ]
+        },
+        "dancenof": {
+            parameters: [
+                {
+                    range: [0,20]
+                }
+            ]
+        },
+        "dancesize": {
+            parameters: [
+                {
+                    range: [0,999]
+                }
+            ]
+        },
 
-
-
+        "itemcost1": {
+            parameters: [
+                {
+                    range: [-100,1000]
+                }
+            ]
+        },
+        "itemcost2": {
+            parameters: [
+                {
+                    range: [-100,1000]
+                }
+            ]
+        },
+        "itemdrawsize": {
+            parameters: [
+                {
+                    range: [-100,1000]
+                }
+            ]
+        },
+        "champprize": {
+        },
+        "autocompete": {
+        },
+        "bestowtomount": {
+        },
     }
 }
 
-module.exports = moddingCommands;
+const itemMonsterCommands = new Set([//UNCATEGORIZED MISC
+    "singlebattle",
+    "chaosrec",
+    "stonebeing",
+    "//MOVEMENT",
+    "noriverpass",
+    "unteleportable",
+    "giftofwater",
+    "nomovepen",
+    "farsail",
+    "norange",
+    "mobilearcher",
+    "statstorm",
+    "statbreak",
+    "//STEALTH",
+    "seduce",
+    "succubus",
+    "beckon",
+    "falsearmy",
+    "foolscouts",
+    "scalewalls",
+    "plaguedoctor",
+    "corruptor",
+    //DAMAGE REDUCTION
+    "slashres",
+    "pierceres",
+    "bluntres",
+    "iceprot",
+    "icenatprot",
+    "invulnerable",
+    "ethereal",
+    "airshield",
+    "ironvul",
+    "//HEALING & DISEASE",
+    "healer",
+    "autohealer",
+    "autodishealer",
+    "autodisgrinder",
+    "diseaseres",
+    "homesick",
+    "uwdamage",
+    "regeneration",
+    "reinvigoration",
+    "woundfend",
+    "hpoverflow",
+    "deadhp",
+    "maxdeadhp",
+    "doheal",
+    "undregen",
+    "uwregen",
+    "xpgain",
+    //SEASONAL POWERS"
+    "springpower",
+    "summerpower",
+    "fallpower",
+    "winterpower",
+    "yearturn",
+    //ELEMENTAL & SCALES
+    "chaospower",
+    "firepower",
+    "coldpower",
+    "magicpower",
+    "stormpower",
+    "darkpower",
+    "slothpower",
+    "deathpower",
+    "growthpower",
+    "dompower",
+    //COMBAT AURAS
+    "diseasecloud",
+    "poisoncloud",
+    "poisonskin",
+    "poisonarmor",
+    "animalawe",
+    "awe",
+    "curseluckshield",
+    "sunawe",
+    "haltheretic",
+    "fear",
+    "fireshield",
+    "uwfireshield",
+    "banefireshield",
+    "acidshield",
+    "damagerev",
+    "bloodvengeance",
+    "slimer",
+    "deathcurse",
+    "deathdisease",
+    "deathfire",
+    "deathparalyze",
+    "uwheat",
+    "mindslime",
+    "heat",
+    "cold",
+    "overcharged",
+    "eyeloss",
+    "spikes",
+    //OTHER COMBAT ABILITIES
+    "ambidextrous",
+    "clumsy",
+    "berserk",
+    "blessbers",
+    "blessfly",
+    "darkvision",
+    "trample",
+    "trampswallow",
+    "digest",
+    "aciddigest",
+    "incorporate",
+    "raiseonkill",
+    "raiseshape",
+    "unsurr",
+    "spiritsight",
+    "truesight",
+    "invisible",
+    "unseen",
+    "twistfate",
+    "powerofdeath",
+    "fearofflood",
+    "mindcollar",
+    "sleepres",
+    //NON-COMBAT ABILITIES
+    "castledef",
+    "siegebonus",
+    "patrolbonus",
+    "pillagebonus",
+    "supplybonus",
+    "falsesupply",
+    "iceforging",
+    "nobadevents",
+    "incprovdef",
+    "incunrest",
+    "leper",
+    "popkill",
+    "insanify",
+    "inquisitor",
+    "heretic",
+    "elegist",
+    "spreaddom",
+    "praise",
+    "shatteredsoul",
+    "taxcollector",
+    "gold",
+    "addupkeep",
+    "xploss",
+    "alchemy",
+    "mason",
+    "incscale",
+    "decscale",
+    "fortkill",
+    "thronekill",
+    "farthronekill",
+    "localsun",
+    "adeptsacr",
+    "gemprod",
+    "elementgems",
+    "sorcerygems",
+    "assassin",
+    //LEADERSHIP
+    "inspirational",
+    "beastmaster",
+    "taskmaster",
+    "undisciplined",
+    "formationfighter",
+    "bodyguard",
+    "standard",
+    "command",
+    "magiccommand",
+    "undcommand",
+    "skirmisher",
+    "warning",
+    //MAGIC ABILITIES
+    "douse",
+    "researchbonus",
+    "slothresearch",
+    "inspiringres",
+    "divineins",
+    "drainimmune",
+    "magicimmune",
+    "forgebonus",
+    "fixforgebonus",
+    "crossbreeder",
+    "bonusspells",
+    "comslave",
+    "commaster",
+    "sabbathmaster",
+    "sabbathslave",
+    "chorusmaster",
+    "chorusslave",
+    "grandcom",
+    "deathbanish",
+    "kokytosret",
+    "infernoret",
+    "voidret",
+    "allret",
+    "spellsinger",
+    "fastcast",
+    "magicstudy",
+    "bringeroffortune",
+    "combatcaster",
+    "glamourmanip",
+    //RITUAL RANGE BOOST
+    "firerange",
+    "airrange",
+    "waterrange",
+    "earthrange",
+    "astralrange",
+    "deathrange",
+    "naturerange",
+    "glamourrange",
+    "bloodrange",
+    "holyrange",
+    "elementrange",
+    "sorceryrange",
+    "allrange",
+    //GEM PRODUCTION
+    "makepearls",
+    "tmpfiregems",
+    "tmpairgems",
+    "tmpwatergems",
+    "tmpearthgems",
+    "tmpastralgems",
+    "tmpdeathgems",
+    "tmpnaturegems",
+    "tmpglamourgems",
+    "tmpbloodslaves",
+    "carcasscollector",
+    //MONSTER SUMMONING
+    "domsummon",
+    "domsummon2",
+    "domsummon20",
+    "raredomsummon",
+    "templetrainer",
+    "summon1",
+    "summon2",
+    "summon3",
+    "summon4",
+    "summon5",
+    "makemonsters1",
+    "makemonsters2",
+    "makemonsters3",
+    "makemonsters4",
+    "makemonsters5",
+    "battlesum1",
+    "battlesum2",
+    "battlesum3",
+    "battlesum4",
+    "battlesum5",
+    "battlesum1d2",
+    "battlesum1d3",
+    "battlesumwarm",
+    "batstartsum1",
+    "batstartsum2",
+    "batstartsum3",
+    "batstartsum4",
+    "batstartsum5",
+    "batstartsum1d6",
+    "batstartsum2d6",
+    "batstartsum3d6",
+    "batstartsum4d6",
+    "batstartsum5d6",
+    "ivylord",
+    "dragonlord",
+    "lamialord",
+    "corpselord",
+    "onisummon",
+    "reanimpriest",
+    "fireelementals",
+    "airelementals",
+    "earthelementals",
+    "waterelementals",
+]);
+
+module.exports = { moddingCommands, itemMonsterCommands };

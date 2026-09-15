@@ -1,4 +1,4 @@
-const moddingCommands = require('./moddingCommands');
+const { moddingCommands, itemMonsterCommands } = require('./moddingCommands');
 
 const vscode = require('vscode');
 const fs = require('fs');
@@ -422,7 +422,7 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
                 continue; //temp
             }
 
-            const command = moddingCommands[activeScope][commandName];
+            const command = (activeScope === "item" && itemMonsterCommands.has(commandName)) ? moddingCommands["monster"][commandName] : moddingCommands[activeScope][commandName];
             if(!command) {
                 const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}: Command not recognised for ${activeScope} scope.`, vscode.DiagnosticSeverity.Error);
                 diagnostics.push(diagnostic);
@@ -446,7 +446,7 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
                         const param = command.parameters[j]
                         const paramArg = statementParams[j]
                         
-                        if(paramArg === null || paramArg === "") {
+                        if(paramArg === undefined || paramArg === "") {
                             if(!param.optional) {
                                 const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}, Parameter ${j+1}: Missing required parameter.`, vscode.DiagnosticSeverity.Error);
                                 diagnostics.push(diagnostic);
@@ -464,7 +464,7 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
                                     diagnostics.push(diagnostic);
                                     continue;
                                 } else {                          
-                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Must be an integer.`, vscode.DiagnosticSeverity.Error);
+                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Must be an integer. ${paramArg}`, vscode.DiagnosticSeverity.Error);
                                     diagnostics.push(diagnostic);
                                     continue;
                                 }
