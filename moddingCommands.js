@@ -7529,7 +7529,7 @@ const moddingCommands = {
         },      
         "req_maxpop": {
             parameters : [
-                { range : [1,99999] }
+                { range : [0,99999] }
             ]
         },        
         "req_minpop": {
@@ -9414,14 +9414,16 @@ const moddingCommands = {
         "code" : {
             parameters : [
                 {
-                    range : [-5000,-300]
+                    range : [-5000,-300],
+                    fixedValues : [0]
                 }
             ]
         },       
         "code2" : {
             parameters : [
                 {
-                    range : [-5000,-300]
+                    range : [-5000,-300],
+                    fixedValues : [0]
                 }
             ]
         },       
