@@ -8522,7 +8522,10 @@ const moddingCommands = {
            
         "nation" : {
             parameters : [
-                nationNbr
+                {
+                    range : nationNbr.range,
+                    fixedValues : [-1,-2]
+                }
             ]
         },
         "nationench" : {

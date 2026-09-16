@@ -366,11 +366,14 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
 
         const text = document.getText()
 
-        let activeScope = "open";
+        let activeScope = {
+            name : "open"
+        };
 
         let scanIndex = 0; // character index of the scan position
         let lineIndex = 0; // character index of the line
         let currentLine = 0;
+
         for(const statement of statements) {
             // calculate text ranges to emit diagnostics for
             let startLine = currentLine;
@@ -405,6 +408,15 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
             let statementParams = [];
             if(stringPart) {
                 statementParams.push(stringPart);
+
+                if(commandName === "msg") {             
+                    activeScope.msgRange = valueRange;
+
+                    const rmatch = stringPart.match(/"[^"]*\[([^\]]+)]"/);
+                    if(rmatch) {
+                        activeScope.sitename = rmatch[1];
+                    }
+                }
             }
             if(withoutComment.length > 0) {                
                 for(const part of withoutComment.split(" ")) {
@@ -413,22 +425,32 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
             }
 
             if(commandName === "end") {
-                activeScope = "open"
+                if(activeScope.requireSitename && activeScope.sitename === undefined) {    
+                    const diagnostic = new vscode.Diagnostic(
+                        activeScope.msgRange ? activeScope.msgRange : activeScope.requireSitename.errorRange,
+                        `${activeScope.requireSitename.commandName}: Command requires a sitename to be specified at the end of the #msg\n  ${activeScope.msgError}.`,
+                        vscode.DiagnosticSeverity.Error);
+                    diagnostics.push(diagnostic);
+                }
+                
+                activeScope = { name : "open" };
                 continue;
             }
 
-            const scopeCom = moddingCommands[activeScope];
-            if(!scopeCom) {
-                continue; //temp
-            }
-
-            const command = (activeScope === "item" && itemMonsterCommands.has(commandName)) ? moddingCommands["monster"][commandName] : moddingCommands[activeScope][commandName];
+            const command = (activeScope.name === "item" && itemMonsterCommands.has(commandName)) ? moddingCommands["monster"][commandName] : moddingCommands[activeScope.name][commandName];
             if(!command) {
-                const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}: Command not recognised for ${activeScope} scope.`, vscode.DiagnosticSeverity.Error);
+                const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}: Command not recognised for ${activeScope.name} scope.`, vscode.DiagnosticSeverity.Error);
                 diagnostics.push(diagnostic);
             } else {
                 if(command.startScope) {
-                    activeScope = command.startScope;
+                    activeScope = { name : command.startScope };
+                }
+
+                if(command.requireSitename) {
+                    activeScope.requireSitename = {
+                        errorRange : commandRange,
+                        commandName : commandName
+                    };
                 }
 
                 if(!command.parameters) {
@@ -497,9 +519,25 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
                                     diagnostics.push(diagnostic);
                                     continue;
                                 }
-                            } else if(param.range) {                            
-                                if(paramNum < param.range[0] || paramNum > param.range[1]) {                                
-                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in the inclusive range ${param.range[0]} - ${param.range[1]}.`, vscode.DiagnosticSeverity.Error);
+                            } else if(param.range) {
+                                // special handling for multiranges              
+                                if(param.range.length > 2) {
+                                    let rangeError = `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in one of the inclusive ranges:`
+                                    let valid = false;
+                                    for(let iRange =0; iRange<param.range.length; iRange+=2) {
+                                        if(paramNum >= param.range[iRange] && paramNum <= param.range[iRange+1]) {
+                                            valid = true;
+                                            break;
+                                        }
+                                        rangeError += ` ${param.range[iRange]} to ${param.range[iRange+1]}`;
+                                        rangeError += (iRange == param.range.length-2 ? "." : ";");
+                                    }
+                                    if(!valid) {
+                                        const diagnostic = new vscode.Diagnostic(valueRange, rangeError, vscode.DiagnosticSeverity.Error);
+                                        diagnostics.push(diagnostic);
+                                    }
+                                } else if(paramNum < param.range[0] || paramNum > param.range[1]) {                                
+                                    const diagnostic = new vscode.Diagnostic(valueRange, `${commandName}, Parameter ${j+1}: Value (${paramArg}) must fall in the inclusive range ${param.range[0]} to ${param.range[1]}.`, vscode.DiagnosticSeverity.Error);
                                     diagnostics.push(diagnostic);
                                     continue;
                                 }
