@@ -58,9 +58,9 @@ class ErrorDiagnosticProvider {
         let scanIndex = 0; // character index of the scan position
         let lineIndex = 0; // character index of the line
         let currentLine = 0;
+        let lastCommandRange = null;
 
-        for(let iStatement =0; iStatement < statements.length; iStatement++) {
-            const statement = statements[iStatement];
+        for(const statement of statements) {
             // calculate text ranges to emit diagnostics for
             let startLine = currentLine;
             let startLineIndex = lineIndex;
@@ -81,6 +81,7 @@ class ErrorDiagnosticProvider {
                 new vscode.Position(startLine, offset-1),
                 new vscode.Position(startLine, offset + statement[1].length)
             );
+            lastCommandRange = commandRange;
             const valueRange = new vscode.Range(
                 new vscode.Position(startLine, offset + statement[1].length + 1),
                 new vscode.Position(currentLine, scanIndex-lineIndex-1)
@@ -235,14 +236,14 @@ class ErrorDiagnosticProvider {
                     }
                 }
             }
+        }        
             
-            if(iStatement === statements.length-1 && activeScope.name !== "open") {
-                const diagnostic = new vscode.Diagnostic(
-                        commandRange,
-                        `Scope <${activeScope.name}> should be closed with #end before the end of the file.`,
-                        vscode.DiagnosticSeverity.Error);
-                    diagnostics.push(diagnostic);
-            }
+        if(activeScope.name !== "open") {
+            const diagnostic = new vscode.Diagnostic(
+                    lastCommandRange,
+                    `Scope <${activeScope.name}> should be closed with #end before the end of the file.`,
+                    vscode.DiagnosticSeverity.Error);
+                diagnostics.push(diagnostic);
         }
 
         //create monster diagnostics including transform and forcetransform
