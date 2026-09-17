@@ -5,7 +5,6 @@ const fs = require('fs');
 
 class ErrorDiagnosticProvider {
     constructor() {
-        this.needEndJson = {};
     }
 
     async loadJson(filename) {
@@ -38,7 +37,7 @@ class ErrorDiagnosticProvider {
         }
     }
 
-    async analyzeDocument(document, diagnosticCollection, startValues) {
+    async analyzeDocument(document, diagnosticCollection) {
         if(!document.uri.fsPath.endsWith('.dm')) {
             return;
         }
@@ -260,12 +259,10 @@ class ErrorDiagnosticProvider {
     async activate(context) {
         console.log('Error Diagnostic Provider active');
     
-        this.needEndJson = await this.loadJson(context.asAbsolutePath('/json/needEnd.json'));
-    
         const diagnosticCollection = vscode.languages.createDiagnosticCollection('dominionsmod');
     
-        vscode.workspace.onDidOpenTextDocument(document => this.analyzeDocument(document, diagnosticCollection, this.needEndJson), this, context.subscriptions);
-        vscode.workspace.onDidChangeTextDocument(event => this.analyzeDocument(event.document, diagnosticCollection, this.needEndJson), this, context.subscriptions);
+        vscode.workspace.onDidOpenTextDocument(document => this.analyzeDocument(document, diagnosticCollection), this, context.subscriptions);
+        vscode.workspace.onDidChangeTextDocument(event => this.analyzeDocument(event.document, diagnosticCollection), this, context.subscriptions);
         vscode.workspace.onDidCloseTextDocument(document => diagnosticCollection.delete(document.uri), null, context.subscriptions);
     
         const codeActionProvider = vscode.languages.registerCodeActionsProvider(
