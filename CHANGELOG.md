@@ -65,3 +65,4 @@ Using a nonexistent command is an error
 Using a command outside of its intended scope is an error
 Add an inline bitmask editor (currently supported spec, spec2, startingaff, all terrain bitmasks, custommagic)
 Add tables for #spec, #spec2 and custommagic bitmasks
+Fix incorrect snippet adding an #end command after #newdom

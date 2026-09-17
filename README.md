@@ -61,5 +61,6 @@ Original credits from JTorkag:
 + Validate that sprite/sound paths point to a valid file
 + Create special validators for weapon/spell damage commands, which change behaviour based on context
 + Resolve the mod commands to enable previewing and validating the output data
++ Validation for map files
 
 **Enjoy!**

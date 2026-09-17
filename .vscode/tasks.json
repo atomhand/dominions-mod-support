@@ -7,7 +7,6 @@
         "dependsOn": [
           "Run commandsJSON.py",
           "Run languageJSON.py",
-          "Run needEndJSON.py",
           "Run snippetsJSON.py",
           "Run snipTemplates.py"
         ],
@@ -38,20 +37,6 @@
           "${workspaceFolder}/Build_Scripts/languageJSON.py",
           "${workspaceFolder}/Build_Scripts/commands.csv",
           "${workspaceFolder}/syntaxes/dominionsmod.tmLanguage.json"
-        ],
-        "options": {
-          "cwd": "${workspaceFolder}"
-        },
-        "problemMatcher": []
-      },
-      {
-        "label": "Run needEndJSON.py",
-        "type": "shell",
-        "command": "python",
-        "args": [
-          "${workspaceFolder}/Build_Scripts/needEndJSON.py",
-          "${workspaceFolder}/Build_Scripts/commands.csv",
-          "${workspaceFolder}/json/needEnd.json"
         ],
         "options": {
           "cwd": "${workspaceFolder}"
