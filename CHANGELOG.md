@@ -56,12 +56,14 @@ Added a bunch more error diagnostics. If there's a particular error that catches
 
 ### [2.0.8]
 
-Ignore files that don't end with .dm (resolves problem with reporting problems in VScode generated .dm.git files)
-Refactor diagnostic parser to improve performance, maintainability and resolve some false positive errors
-Improve parser to understand multiline string parameters
-Add error for when an event command requires a site name to be specified in the #msg
-Extend validation to cover all modding commands
-Using a nonexistent command is an error
-Using a command outside of its intended scope is an error
-Add an inline bitmask editor (currently supported spec, spec2, startingaff, all terrain bitmasks, custommagic)
-Add tables for #spec, #spec2 and custommagic bitmasks
+ + Ignore files that don't end with .dm (resolves problem with reporting problems in VScode generated .dm.git files)
+ + Comprehensively refactor diagnostic parser to improve performance, maintainability and resolve some false positive errors
+ + Improve parser to understand multiline string parameters
+ + Add error for when an event command requires a site name to be specified in the #msg
+ + Extend validation to cover all modding commands
+ + Using a nonexistent command is an error
+ + Using a command outside of its intended scope is an error
+ + Add an inline bitmask editor (currently supported spec, spec2, startingaff, all terrain bitmasks, custommagic)
+ + Add tables for #spec, #spec2 and custommagic bitmasks
+ + Fix incorrect snippet adding an #end command after #newdom
+ 

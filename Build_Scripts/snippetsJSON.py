@@ -13,7 +13,7 @@ def csv_to_snippets(csv_file, output_file):
             prefix, description = row
             snippet_body = [f"#{prefix}"]
 
-            if prefix.lower().startswith(("new", "select")):
+            if prefix.lower().startswith(("new", "select")) and prefix.lower() != "newdom":
                 snippet_body.append("")  # Add a new line
                 snippet_body.append("#end")  # Add a line with "#end"
 

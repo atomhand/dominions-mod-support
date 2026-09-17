@@ -5391,15 +5391,6 @@
     ],
     "description": "Armor nbr should be a number between 300 and 999. It must not be the same as any other armor. This new armor will be affected by the following modding commands and there should be an #end command at the end."
   },
-  "#newdom ": {
-    "prefix": "#newdom ",
-    "body": [
-      "#newdom ",
-      "",
-      "#end"
-    ],
-    "description": "Changes dominion to that of the event owner and sets it to the level of 1d(value) candles."
-  },
   "#newevent": {
     "prefix": "#newevent",
     "body": [
