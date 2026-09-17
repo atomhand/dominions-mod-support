@@ -18,46 +18,6 @@ class ErrorDiagnosticProvider {
             return null;
         }
     }
-    
-    
-    
-
-    checkMissingEnd(lines, diagnostics, startValues) {
-        let lastCommand = null;
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            
-            if (line.includes('#end')) {
-                lastCommand = null;
-            }
-            
-            for (const command of startValues.command) {
-                if (line.startsWith(command)) {
-                    if (lastCommand && !line.endsWith('#end')) {
-                        const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
-                        const diagnostic = new vscode.Diagnostic(range, `Missing #end command for ${lastCommand} above this.`, vscode.DiagnosticSeverity.Error);
-                        diagnostic.code = 'missing-end-above';
-                        diagnostics.push(diagnostic);
-                    }
-                    lastCommand = command;
-                    break; // No need to continue checking after a match
-                }
-            }
-        }
-        
-        // Check if there's a missing #end by the end of the document after a startValue
-        if (lastCommand) {
-            const lastLineIndex = lines.length - 1;
-            const lastLine = lines[lastLineIndex].trim();
-            if (!lastLine.endsWith('#end')) {
-                const range = new vscode.Range(new vscode.Position(lastLineIndex, 0), new vscode.Position(lastLineIndex, lastLine.length));
-                const diagnostic = new vscode.Diagnostic(range, `Missing #end command for ${lastCommand} at the end of the document.`, vscode.DiagnosticSeverity.Error);
-                diagnostic.code = 'missing-end-below';
-                diagnostics.push(diagnostic);
-            }
-        }
-    }
 
     getNumber(str, allowFloat) {
         // regex : is the entire string a number (decimal allowed)
@@ -78,286 +38,12 @@ class ErrorDiagnosticProvider {
         }
     }
 
-
-    checkCustomRangeValues(statement, commandRange, valueRange, diagnostics, command, minValue, maxValue, allowString = false, allowEmptyValue = false, legalValuesSet = []) {    
-        if (statement[1] === command) {
-            const parameters = statement.slice(2)
-
-            // Check if matchedValue array has more than 2 objects
-            if (parameters.length > 2) {
-                const diagnostic = new vscode.Diagnostic(
-                    valueRange,
-                    `Too many parameters for ${command} command`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-                return;  // Skip further checks for this line
-            }
-
-            if (parameters[0] !== "") {
-                const value = parameters[0];
-
-                if (value === null || value === undefined) {
-                    const diagnostic = new vscode.Diagnostic(
-                        commandRange,
-                        `Missing parameter for ${command} command.`,
-                        vscode.DiagnosticSeverity.Error
-                    );
-                    diagnostics.push(diagnostic);
-                } else if (allowString && typeof value === 'string') {
-                    // Check if the string is wrapped in quotes
-                    const isQuotedString = /^".*"$/.test(value);
-
-                    if (!isQuotedString) {
-                        const diagnostic = new vscode.Diagnostic(
-                            valueRange,
-                            `String values for ${command} should be wrapped in quotes`,
-                            vscode.DiagnosticSeverity.Error
-                        );
-                        diagnostics.push(diagnostic);
-                    }
-                } else if (!allowString && typeof value === 'string') {
-                    const diagnostic = new vscode.Diagnostic(
-                        valueRange,
-                        `String values are not allowed for ${command} command`,
-                        vscode.DiagnosticSeverity.Error
-                    );
-                    diagnostics.push(diagnostic);
-                } else if (typeof value === 'number') {
-                    if ((value < minValue || value > maxValue) || (legalValuesSet.length > 0 && !legalValuesSet.includes(value))) {
-                        const diagnostic = new vscode.Diagnostic(
-                            valueRange,
-                            `Value ${value} for ${command} should be between ${minValue} and ${maxValue}`,
-                            vscode.DiagnosticSeverity.Error
-                        );
-                        diagnostics.push(diagnostic);
-                    }
-                }
-            } else if (!allowEmptyValue) {
-                const diagnostic = new vscode.Diagnostic(
-                    commandRange,
-                    `Value missing for ${command} command`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-            }
-        }
-    }
-    
-    // use this when there's two ranges a single value for a command can exist in
-    checkCustomRangeTwoSetsValues(statement, commandRange, valueRange, diagnostics, command, minValue1, maxValue1, minValue2, maxValue2, allowString = false, allowEmptyValue = false, legalValuesSet = []) {    
-        if (statement[1] === command) {
-            const parameters = statement.slice(2)
-
-            // Check if matchedValue array has more than 2 objects
-            if (parameters.length > 2) {
-                const diagnostic = new vscode.Diagnostic(
-                    valueRange,
-                    `Too many parameters for ${command} command`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-                return;  // Skip further checks for this line
-            }
-
-            if (parameters[0] !== "") {
-                const value = parameters[0];
-
-                if (value === null) {
-                    const diagnostic = new vscode.Diagnostic(
-                        commandRange,
-                        `Invalid value format for ${command} command`,
-                        vscode.DiagnosticSeverity.Error
-                    );
-                    diagnostics.push(diagnostic);
-                } else if (allowString && typeof value === 'string') {
-                    // Check if the string is wrapped in quotes
-                    const isQuotedString = /^".*"$/.test(value);
-
-                    if (!isQuotedString) {
-                        const diagnostic = new vscode.Diagnostic(
-                            valueRange,
-                            `String values for ${command} should be wrapped in quotes`,
-                            vscode.DiagnosticSeverity.Error
-                        );
-                        diagnostics.push(diagnostic);
-                    }
-                } else if (typeof value === 'number') {
-                    const isInRange1 = (value >= minValue1 && value <= maxValue1);
-                    const isInRange2 = (value >= minValue2 && value <= maxValue2);
-                    
-                    if (!((isInRange1 || isInRange2) || (legalValuesSet.length > 0 && legalValuesSet.includes(value)))) {
-                        const diagnostic = new vscode.Diagnostic(
-                            valueRange,
-                            `Value ${value} for ${command} should be between ${minValue1} and ${maxValue1} or between ${minValue2} and ${maxValue2}`,
-                            vscode.DiagnosticSeverity.Error
-                        );
-                        diagnostics.push(diagnostic);
-                    }
-                }
-            } else if (!allowEmptyValue) {
-                const diagnostic = new vscode.Diagnostic(
-                    commandRange,
-                    `Value missing for ${command} command`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-            }
-        }
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    checkPowerOfTwoValues(statement, commandRange, valueRange, diagnostics, command, maxPower, allowEmptyValue = false, legalValuesSet = []) {    
-        if (statement[1] === command) {
-            const parameters = statement.slice(2);
-
-            if (parameters.length > 2) {
-                const diagnostic = new vscode.Diagnostic(
-                    valueRange,
-                    `Invalid format for ${command} command`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-                return;  // Skip further checks for this line
-            }
-
-            // Add code here
-             if (allowEmptyValue && parameters[0] === "") {
-                return;
-            } else if (parameters[0] === "") {
-                const diagnostic = new vscode.Diagnostic(
-                    commandRange,
-                    `Missing or invalid value for ${command} command`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-            } else if (typeof parameters[0] !== 'number') {
-                const diagnostic = new vscode.Diagnostic(
-                    valueRange,
-                    `Invalid value ${parameters[0]} for ${command}. Value should be a valid number.`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-            } else {
-                const value = parseFloat(parameters[0]);
-                const isPowerOfTwo = (value & (value - 1)) === 0 && value !== 0 && value <= Math.pow(2, maxPower);
-
-                if (!isPowerOfTwo || (legalValuesSet.length !== 0 && legalValuesSet.includes(value))) {
-                    const diagnostic = new vscode.Diagnostic(
-                        valueRange,
-                        `Value ${value} for ${command} should be a power of 2 up to 2^${maxPower}`,
-                        vscode.DiagnosticSeverity.Error
-                    );
-                    diagnostics.push(diagnostic);
-                }
-            }
-        }
-    }
-    
-    
-
-
-checkTwoCustomRangeValues(statement, commandRange, valueRange, diagnostics, command, minValueSet1, maxValueSet1, minValueSet2, maxValueSet2, legalValuesSet1 = [], legalValuesSet2 = []) {
-    if (statement[1] === command) {
-        const parameters = statement.slice(2)
-
-        if (parameters.length >= 2) {
-            const value1 = parseInt(parameters[0]);
-            const value2 = parseInt(parameters[1]);
-
-            if (
-                ((value1 < minValueSet1 || value1 > maxValueSet1) && (legalValuesSet1.length === 0 || !legalValuesSet1.includes(value1))) ||
-                ((value2 < minValueSet2 || value2 > maxValueSet2) && (legalValuesSet2.length === 0 || !legalValuesSet2.includes(value2)))
-            ) {
-                const diagnostic = new vscode.Diagnostic(
-                    valueRange,
-                    `Values for ${command} should be within specified ranges or legal alternatives`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-            }
-        } else {
-            const diagnostic = new vscode.Diagnostic(
-                commandRange,
-                `Missing or invalid values for ${command} command`,
-                vscode.DiagnosticSeverity.Error
-            );
-            diagnostic.code = 'show-hover';
-            diagnostics.push(diagnostic);
-        }
-    }
-}
-
-checkValueRangeAndSet(statement, commandRange, valueRange, diagnostics, command, minValue, maxValue, allowedValues) {
-    if (statement[1] === command) {
-        const parameters = statement.slice(2)
-
-        if (parameters.length >= 2) {
-            const value1 = parseInt(parameters[0]);
-            const value2 = parseInt(parameters[1]);
-
-            // Check if value1 is within the specified numeric range
-            // and if value2 is in the allowed set.
-            if ((value1 < minValue || value1 > maxValue) || !allowedValues.includes(value2)) {
-                const diagnostic = new vscode.Diagnostic(
-                    valueRange,
-                    `The first value of ${command} must be between ${minValue} and ${maxValue}, and the second must be one of: ${allowedValues.join(', ')}.`,
-                    vscode.DiagnosticSeverity.Error
-                );
-                diagnostics.push(diagnostic);
-            }
-        } else {
-            // Handle cases where either value is missing or invalid
-            const diagnostic = new vscode.Diagnostic(
-                commandRange,
-                `Missing or invalid values for ${command} command.`,
-                vscode.DiagnosticSeverity.Error
-            );
-            diagnostics.push(diagnostic);
-        }
-    }
-}
-
-checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command, maxLength) {
-    if (statement[1] === command) {
-        const parameters = statement.slice(2)
-
-        if (parameters[0].length > maxLength) {            
-            const diagnostic = new vscode.Diagnostic(
-                valueRange,
-                `The quoted text after ${command} exceeds the maximum allowed length of ${maxLength} characters. Your current message is ${quotedText.length}.`,
-                vscode.DiagnosticSeverity.Error
-            );
-            diagnostics.push(diagnostic);
-        } else if (parameters[0].length == 0) {
-            // No opening quote found
-            const diagnostic = new vscode.Diagnostic(
-                commandRange,
-                `No quoted text found after ${command} command.`,
-                vscode.DiagnosticSeverity.Error
-            );
-            diagnostics.push(diagnostic);
-        }
-    }
-}
-
-
-
     async analyzeDocument(document, diagnosticCollection, startValues) {
         if(!document.uri.fsPath.endsWith('.dm')) {
             return;
         }
 
         const diagnostics = [];
-
-        const lines = document.getText().split('\n');
-        this.checkMissingEnd(lines, diagnostics, startValues);
 
         const pattern = /(?:^)+#([a-z_\d]+)[ \t]*((?:"[^"]*"))?[ \t]*([^\n]*)\n/gm;
         const statements = document.getText().matchAll(pattern);
@@ -374,7 +60,8 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
         let lineIndex = 0; // character index of the line
         let currentLine = 0;
 
-        for(const statement of statements) {
+        for(let iStatement =0; iStatement < statements.length; iStatement++) {
+            const statement = statements[iStatement];
             // calculate text ranges to emit diagnostics for
             let startLine = currentLine;
             let startLineIndex = lineIndex;
@@ -548,6 +235,14 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
                         }
                     }
                 }
+            }
+            
+            if(iStatement === statements.length-1 && activeScope.name !== "open") {
+                const diagnostic = new vscode.Diagnostic(
+                        commandRange,
+                        `Scope <${activeScope.name}> should be closed with #end before the end of the file.`,
+                        vscode.DiagnosticSeverity.Error);
+                    diagnostics.push(diagnostic);
             }
         }
 
