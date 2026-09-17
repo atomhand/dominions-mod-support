@@ -1,6 +1,6 @@
 # dominions-mod-support README
 
-This extension provides syntax highlighting, autocomplete and hover information on commands. 
+This extension provides syntax highlighting, autocomplete and hover information on commands, and an inline editor for bitmask parameters. 
 
 ## Features
 
@@ -13,29 +13,39 @@ Addtional details including relevent tables for some keywords. Will add more in 
 
 Error checking for illegal values and missing #end commands.
 
-If you refernce a vanilla asset such as with #selectarmor, if you hover over the value it will give you details of what armor you are selecting. 
+If you reference a vanilla asset such as with #selectarmor, if you hover over the value it will give you details of what armor you are selecting. 
 
 ![ArmorExample](examples/armorexample.png)
+
+Hovering a command which accepts a bitmask parameter displays a table of bitmask values which can be interacted with to modify the bitmask directly.
+
+![BitmaskExample](examples/bitmaskeditexample.png)
 
 Commenting and uncommenting hotkey support. 
  
 
 ## Known Issues
 
-I'm sure there's a handful. Just undocumented so far. See below.
-There's missing diagnostics and some are intentionally disabled due to needing some refactoring to account for edge cases. 
 + Copy Sprite hover will always show monster details regardless if its in an item's section. 
 
-A lot of commands have no maximum value listed so i've guessed or used seemingly reasonable values. If you find errors, please let me know. 
+A lot of commands have no value ranges listed so I have guessed reasonable ranges. If you find errors, please let me know.
+Some commands are missing descriptions.
 
 ## Release Notes
 
 There is likely errors in my data for all the commands. I did a lot of scraping and regex instead of going through it by hand. If you catch any and are feeling extra generous please fix and submit a pull request. Or if not and it's small just let me know via discord @zegma and I can include the fix in during an update. 
 
-### 2.0.7
+### 2.0.8
 
-Caught up to dom version 6.24
-Added before but forgot to make a note, support for hotkey commenting. Ctrl-K to comment a selected text, Shift-Ctrl-K to uncomment.
+Ignore files that don't end with .dm (resolves extension reading from VScode generated .dm.git files)
+Refactor diagnostic parser to improve performance, maintainability and resolve some false positive errors
+Improve parser to understand multiline string parameters
+Add error for when an event command requires a site name to be specified in the #msg
+Extend validation to cover all modding commands
+Using a nonexistent command is an error
+Using a command outside of its intended scope is an error
+Add an inline bitmask editor (currently supported spec, spec2, startingaff, all terrain bitmasks, custommagic)
+Add tables for #spec, #spec2 and custommagic bitmasks
 
 ### Credits
 I wanted to highlight [djmcgill](https://github.com/djmcgill/vscode-syntax-highlighting-dominions-5-) for creating a syntax highlighting tool years ago. Used that for a while and the decided I wanted to improve on that base. 
@@ -48,7 +58,8 @@ General thanks to all the folks in the [Dom Modding Discord](https://discord.gg/
 
 ### ToDO
 
-In no particular order things I want to do. 
++ Validate that sprite/sound paths point to a valid file
++ 
 
 + Change the hover for ID on monster and item sprite commands to return sprite in addition to other data
 + Allow hover to return data on items/monsters by name instead of just by ID. Problematic due to all the damn warriors....
