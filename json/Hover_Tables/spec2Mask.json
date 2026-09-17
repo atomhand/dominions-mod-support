@@ -1,0 +1,14 @@
+[
+  {"Nbr": 0, "Spec2": "Nothing"},
+  {"Nbr": 4, "Spec2": "Does not affect riders"},
+  {"Nbr": 8, "Spec2": "No fall damage if rider is dismounted"},
+  {"Nbr": 16, "Spec2": "Only affects heat aura units"},
+  {"Nbr": 64, "Spec2": "Only affects terrain"},
+  {"Nbr": 256, "Spec2": "Does not affect mounts"},
+  {"Nbr": 1024, "Spec2": "Only affects unit that can sleep"},
+  {"Nbr": 2048, "Spec2": "Doesn't trigger returning"},
+  {"Nbr": 4096, "Spec2": "Disease res roll negates"},
+  {"Nbr": 8192, "Spec2": "Does not affect males"},
+  {"Nbr": 16384, "Spec2": "Does not affect females"},
+  {"Nbr": 32768, "Spec2": "Only affects cold aura units"}
+]

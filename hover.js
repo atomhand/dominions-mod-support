@@ -26,6 +26,64 @@ class HoverProvider {
             return null;
           }
     }
+
+    async replaceCommand(uri, position, commandName, value) {
+        // capture group 1 -- command name
+        // capture group 2 -- previous value
+        // capture group 3 -- remaining params/comment
+        const doc = await vscode.workspace.openTextDocument(uri);
+        const line = doc.lineAt(position.line);
+        const paramsMatch = line.text.match(/^(#[^\s-]+)([ \t]+-?[^\s"-]* ?)?([^\n]*)/);
+        
+        const edit = new vscode.WorkspaceEdit();
+
+        edit.replace(uri, line.range, `${paramsMatch[1]} ${value}${paramsMatch[3].length>0 ? " " : ""}${paramsMatch[3]}`);
+        await vscode.workspace.applyEdit(edit);
+
+        const editor = vscode.window.activeTextEditor;
+        editor.selection = new vscode.Selection(position, position);
+        await vscode.commands.executeCommand('editor.action.hideHover');
+        await vscode.commands.executeCommand('editor.action.showHover');
+    }
+
+
+    generateBitmaskSelectorTable(data, bitmask, customMessage, uri, position, commandName) {
+        // Check if the data is an array
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+            // Extract the headers from the first object
+            const headers = Object.keys(data[0]);
+            const bitHeader = headers[0];
+
+            // Generate rows for each object using the extracted headers
+            const tableRows = data.map(
+                datarow => {
+                    const bit = BigInt(datarow[bitHeader]);
+                    const bitSet = bit & bitmask;
+                    //const args = [{ uri : uri}, {line: line}, {commandName : "testcommandName"}, {value : String(bitSet ? bitmask - bit : bitmask + bit)}];
+                    const args = [ uri, position, commandName, String(bitSet ? bitmask - bit : bitmask + bit)];
+                    const toggleCommand = vscode.Uri.parse(
+                        `command:bitmaskSelector.replace?${encodeURIComponent(JSON.stringify(args))}`
+                    );
+
+                    const toggleButton = bit == 0 ? 
+                    bitmask == 0 ? "✅": "🔲"
+                    :`[${bitSet ? "✅": "🔲"}](${toggleCommand})`;
+
+                    return `| ${toggleButton} | ${headers.map(header => datarow[header] || "").join(' | ')} |`
+                }
+            ).join('\n');
+    
+            // Combine the header and rows to form the table content
+            const tableContent = ` | On | ${headers.join(' | ')} |\n| ${headers.map(() => ':---:').join(' | ')} |:---:|\n${tableRows}`;
+    
+            // Check if the custom message is not empty, then include it before the table
+            return new vscode.MarkdownString(customMessage ? `${customMessage}\n\n${tableContent}` : tableContent); 
+        } else {
+            // Handle other cases, such as invalid input
+            return new vscode.MarkdownString('Invalid input data.');
+        }
+    }
+
     generateMarkdownTable(data, customMessage = "") {
         // Check if the data is an array
         if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
@@ -66,6 +124,13 @@ class HoverProvider {
 
 
     async activate(context) {
+        vscode.commands.registerCommand(
+            'bitmaskSelector.replace',
+            async (uri, line, commandName, value) => {
+                await this.replaceCommand(uri, line, commandName,value);
+            }
+        );
+        
         console.log('Hover provider active');
 
         this.commandJson = await this.loadJson(context.asAbsolutePath('/json/commands.json'));
@@ -90,6 +155,8 @@ class HoverProvider {
                 console.log('Hovered command', command[0]);
                 console.log('Hovered value', command[1]); // fix this for multivalue commands
                 console.log('Hovered Word', word);
+
+                const commandIsHovered = command[0] == word;
                 
     
                 const nationcmds = ["restricted", "nationrebate", "notfornation", "nat", "selectnation","extramsg"]
@@ -98,7 +165,7 @@ class HoverProvider {
                 const spellcmds = ["onebattlespell", "selectspell","nextspell"]
                 const sitescmds = ["selectsite", "newsite"]
                 const enchtcmds = ["enchrebate50", "enchrebate25p", "enchrebate50p",]
-                const affcmds = ["dt_aff"]
+                const affcmds = ["dt_aff","startingaff"]
                 const weaponscmds = ["weapon","selectweapon","copyweapon","secondaryeffect","secondaryeffectalways"]
                 const armorcmds = ["armor","selectarmor","copyarmor"]
                 const assassincmds = ["assencloc"] // TEST FROM HERE DOWNWARDS
@@ -115,11 +182,46 @@ class HoverProvider {
                 const eramaskcmds = ["eramask"] // technically a mask but presolved
                 const enchlookcmds = ["globallook"]
                 const cloudtypecmds = ["aftercloud"]
-   
+
+                const descriptionObj = this.commandJson.find(obj => obj["CommandName"] === command[0]);
+                const description = descriptionObj ? descriptionObj.description : "No description found for command.";
+
+                // BIT MASKS
+
+                let isBitmask = false;
+                let tableData = null;
+                if(command[0] === "spec") {
+                    tableData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/specMask.json'));
+                    isBitmask = true;
+                } else if(command[0] === "spec2") {
+                    tableData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/spec2Mask.json'));
+                    isBitmask = true;
+                } else if(command[0] === "custommagic") {
+                    tableData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/magicPathBitmask.json'));
+                    isBitmask = true;
+                } else if (affcmds.some(cmd => cmd === command[0])) {
+                    tableData = await this.loadJson(context.asAbsolutePath('/json/afflictions.json'));
+                    isBitmask = true;
+                } else if (terrainmaskcmds.some(cmd => cmd === command[0])) {
+                    tableData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/terrainMask.json'));
+                    isBitmask = true;
+                }
+                else if (sitelocationcmds.some(cmd => cmd === command[0])) {
+                    tableData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/siteTerrainBitmask.json'));
+                    isBitmask = true;
+                }
+
+                if(isBitmask) {
+                    const table = this.generateBitmaskSelectorTable(tableData, BigInt(command[1]), description, document.uri, position, command[0]);
+                    table.isTrusted = true;
+                    return new vscode.Hover(table);
+                }
+
+
                 if (nationcmds.some(cmd => cmd === command[0])) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/nations.json'));
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "id";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -131,8 +233,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -141,7 +243,7 @@ class HoverProvider {
                         }
                     }
                 }
-                else if (unitcmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                else if (unitcmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/BaseU.json'));
                     const keyToFind = "id";
@@ -155,7 +257,7 @@ class HoverProvider {
                     }
                 }
     
-                else if (itemcmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                else if (itemcmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/BaseI.json'));
                     const keyToFind = "id";
@@ -169,7 +271,7 @@ class HoverProvider {
                     }
                 }
     
-                else if (spellcmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                else if (spellcmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/spells.json'));
                     const keyToFind = "id";
@@ -183,7 +285,7 @@ class HoverProvider {
                     }
                 }
     
-                else if (sitescmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                else if (sitescmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/MagicSites.json'));
                     const keyToFind = "id";
@@ -197,7 +299,7 @@ class HoverProvider {
                     }
                 }
     
-                else if (enchtcmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                else if (enchtcmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/enchantments.json'));
                     const keyToFind = "number";
@@ -211,40 +313,11 @@ class HoverProvider {
                     }
                 }
 
-                else if (affcmds.some(cmd => cmd === command[0])) {
-
-                    const jsonData = await this.loadJson(context.asAbsolutePath('/json/afflictions.json'));
-                
-                    if (word !== command[0]) {
-                        const keyToFind = "bit_value";
-                        const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
-        
-                        if (matchedValue) {
-                            const customMessage = null;
-                
-                            // Call the function to generate the hover content
-                            return this.generateHoverTableContent(matchedValue, customMessage);
-                        }
-                    }
-                    
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
-                        const secondValue = this.generateMarkdownTable(jsonData);
-                        
-                        if (secondValue){
-                            
-                        return this.generateHoverTableContent(jsonData, firstValue.description);
-                        }
-                    }
-
-                
-                }
-
                 else if (enchlookcmds.some(cmd => cmd === command[0])) {
 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/enchlook.json'));
                 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "Nbr";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -256,8 +329,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -269,7 +342,7 @@ class HoverProvider {
                 
                 }
 
-                /* else if (enchlookcmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                /* else if (enchlookcmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/enchlook.json'));
                     const keyToFind = "nbr";
@@ -283,7 +356,7 @@ class HoverProvider {
                     }
                 } */
 
-                else if (weaponscmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                else if (weaponscmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/weapons.json'));
                     const keyToFind = "id";
@@ -297,7 +370,7 @@ class HoverProvider {
                     }
                 }
 
-                else if (armorcmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                else if (armorcmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/armors.json'));
                     const keyToFind = "id";
@@ -314,7 +387,7 @@ class HoverProvider {
                 else if (assassincmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/assassin_locations.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "id";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -326,8 +399,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -340,7 +413,7 @@ class HoverProvider {
                 else if (magicpathcmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/monsterMagicPaths.json'));
 
-                    if (word !== command[0] && word == command[1]) {
+                    if (!commandIsHovered && word == command[1]) {
                         const keyToFind = "Nbr";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -352,34 +425,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
-                        const secondValue = this.generateMarkdownTable(jsonData);
-                        
-                        if (secondValue){
-                            
-                        return this.generateHoverTableContent(jsonData, firstValue.description);
-                        }
-                    }
-                }
-
-                else if (sitelocationcmds.some(cmd => cmd === command[0])) {
-                    const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/siteTerrainBitmask.json'));
-
-                    if (word !== command[0]) {
-                        const keyToFind = "Mask";
-                        const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
-        
-                        if (matchedValue) {
-                            const customMessage = "Need to add bitmask decoder";
-                
-                            // Call the function to generate the hover content
-                            return this.generateHoverTableContent(matchedValue, customMessage);
-                        }
-                    }
-                    
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -392,7 +439,7 @@ class HoverProvider {
                 else if (realmcmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/homeRealms.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "Nbr";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -404,8 +451,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -418,7 +465,7 @@ class HoverProvider {
                 else if (itemslotscmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/itemSlotBitmask.json'));
                 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "Mask";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
                 
@@ -434,7 +481,7 @@ class HoverProvider {
                             });
                         }
                     } else {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                 
                         if (secondValue) {
@@ -446,7 +493,7 @@ class HoverProvider {
                 else if (scalecmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/scaleValues.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "Nbr";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -458,8 +505,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -472,7 +519,7 @@ class HoverProvider {
                 else if (templepiccmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/templePic.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "Nbr";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -484,8 +531,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -498,7 +545,7 @@ class HoverProvider {
                 else if (forttypecmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/fortTypes.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "Fort nbr";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -510,8 +557,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -524,7 +571,7 @@ class HoverProvider {
                 else if (magicschoolcmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/magicSchools.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "Nbr";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -536,8 +583,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -550,7 +597,7 @@ class HoverProvider {
                 else if (spelleffectscmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/effects_info.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "number";
                         // Convert the word string to a number
                         let numberValue = parseFloat(word);
@@ -570,41 +617,8 @@ class HoverProvider {
                     }
                     
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
-                        const secondValue = this.generateMarkdownTable(jsonData);
-                        
-                        if (secondValue){
-                            
-                        return this.generateHoverTableContent(jsonData, firstValue.description);
-                        }
-                    }
-                }
-
-                else if (terrainmaskcmds.some(cmd => cmd === command[0])) {
-                    const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/terrainMask.json'));
-
-                    if (word !== command[0]) {
-                        const keyToFind = "Nbr";
-                        const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
-        
-                        if (matchedValue) {
-                            const customMessage = null;
-                
-                            // Call the function to generate the hover content
-                            return this.generateHoverTableContent(matchedValue, customMessage);
-                        }
-                        else {
-                            // Handle the case when matchedValue is not found
-                            return new vscode.Hover({
-                                language: "English",
-                                value: "Need to add bitmask decoder"
-                            });
-                        }
-                    }
-                    
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -617,7 +631,7 @@ class HoverProvider {
                 else if (eramaskcmds.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/eraMask.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "Mask";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -629,8 +643,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -640,7 +654,7 @@ class HoverProvider {
                     }
                 }
 
-                else if (unitcmds.some(cmd => cmd === command[0]) && word !== command[0]) {
+                else if (unitcmds.some(cmd => cmd === command[0]) && !commandIsHovered) {
                 
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/BaseU.json'));
                     const keyToFind = "id";
@@ -671,8 +685,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){
@@ -685,7 +699,7 @@ class HoverProvider {
 
 
                 else if (word != null) {
-                        const matchedValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                        const matchedValue = this.commandJson.find(obj => obj["CommandName"] === word);
                     
                         if(matchedValue) {                            
                             return new vscode.Hover({
@@ -701,7 +715,7 @@ class HoverProvider {
                 else if (_____.some(cmd => cmd === command[0])) {
                     const jsonData = await this.loadJson(context.asAbsolutePath('/json/Hover_Tables/_____.json'));
 
-                    if (word !== command[0]) {
+                    if (!commandIsHovered) {
                         const keyToFind = "id";
                         const matchedValue = jsonData.find(obj => obj[keyToFind] === word);
         
@@ -713,8 +727,8 @@ class HoverProvider {
                         }
                     }
                     
-                    else if (word == command[0]) {
-                        const firstValue = this.commandJson.find(obj => obj["Friendly name"] === word);
+                    else if (commandIsHovered) {
+                        const firstValue = this.commandJson.find(obj => obj["CommandName"] === word);
                         const secondValue = this.generateMarkdownTable(jsonData);
                         
                         if (secondValue){

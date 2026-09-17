@@ -428,7 +428,7 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
                 if(activeScope.requireSitename && activeScope.sitename === undefined) {    
                     const diagnostic = new vscode.Diagnostic(
                         activeScope.msgRange ? activeScope.msgRange : activeScope.requireSitename.errorRange,
-                        `${activeScope.requireSitename.commandName}: Command requires a sitename to be specified at the end of the #msg\n  ${activeScope.msgError}.`,
+                        `${activeScope.requireSitename.commandName}: Command requires a sitename to be specified at the end of the #msg.`,
                         vscode.DiagnosticSeverity.Error);
                     diagnostics.push(diagnostic);
                 }
@@ -439,7 +439,7 @@ checkQuotedTextLength(statement, commandRange, valueRange, diagnostics, command,
 
             const command = (activeScope.name === "item" && itemMonsterCommands.has(commandName)) ? moddingCommands["monster"][commandName] : moddingCommands[activeScope.name][commandName];
             if(!command) {
-                const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}: Command not recognised for ${activeScope.name} scope.`, vscode.DiagnosticSeverity.Error);
+                const diagnostic = new vscode.Diagnostic(commandRange, `${commandName}: Command not recognised for <${activeScope.name}> scope.`, vscode.DiagnosticSeverity.Error);
                 diagnostics.push(diagnostic);
             } else {
                 if(command.startScope) {

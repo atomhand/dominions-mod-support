@@ -3471,13 +3471,6 @@
     ],
     "description": "Unrest will increase by 1-value (open ended die roll) in all forts each month.  These commands are set the special attributes of the nation and its Dominion."
   },
-  "#Friendly name": {
-    "prefix": "#Friendly name",
-    "body": [
-      "#Friendly name"
-    ],
-    "description": "description"
-  },
   "#friendlyench": {
     "prefix": "#friendlyench",
     "body": [

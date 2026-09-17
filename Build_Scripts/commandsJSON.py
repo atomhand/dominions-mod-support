@@ -14,14 +14,14 @@ def csv_to_json(csv_file, json_file):
         # Include the header row as a special JSON object
         header_friendly_name = headers[0]
         header_description = headers[1]
-        header_json_object = {"Friendly name": header_friendly_name, "description": header_description}
+        header_json_object = {"CommandName": header_friendly_name, "description": header_description}
         json_objects.append(header_json_object)
 
         # Process the subsequent rows
         for row in csv_reader:
             friendly_name = row[0]
             description = row[1]
-            json_object = {"Friendly name": friendly_name, "description": description}
+            json_object = {"CommandName": friendly_name, "description": description}
             json_objects.append(json_object)
 
     # Write JSON objects to a JSON file

@@ -2,8 +2,6 @@
 
 All notable changes to the "dominions-mod-support" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
 ## [1.0]
 
 - Initial release
@@ -56,7 +54,7 @@ Caught up to dom version 6.24
 Added before but forgot to make a note, support for hotkey commenting. Ctrl-K to comment a selected text, Shift-Ctrl-K to uncomment.
 Added a bunch more error diagnostics. If there's a particular error that catches you a lot and I'm not checking for it, let me know and I'll add it in.  
 
-### [2.0.7]
+### [2.0.8]
 
 Refactor diagnostic parser to improve performance, maintainability and resolve some false positive errors
 Improve parser to understand multiline string parameters
@@ -64,3 +62,5 @@ Add error for when an event command requires a site name to be specified in the 
 Extend validation to cover all modding commands
 Using a nonexistent command is an error
 Using a command outside of its intended scope is an error
+Add an inline bitmask editor (currently supported spec, spec2, startingaff, all terrain bitmasks, custommagic)
+Add tables for #spec, #spec2 and custommagic bitmasks
