@@ -44,7 +44,7 @@ class ErrorDiagnosticProvider {
 
         const diagnostics = [];
 
-        const pattern = /(?:^)+#([a-z_\d]+)[ \t]*((?:"[^"]*"))?[ \t]*([^\n]*)\n/gm;
+        const pattern = /(?:^)+(?:#([a-z_\d]+)[ \t]*((?:"[^"]*"))?[ \t]*([^\n]*)\n)|([^\n]+)/gm;
         const statements = document.getText().matchAll(pattern);
 
         //Refactor all of this to new methods to avoid repeating the same standard values for repeat stuff like range or boost
@@ -64,33 +64,48 @@ class ErrorDiagnosticProvider {
             // calculate text ranges to emit diagnostics for
             let startLine = currentLine;
             let startLineIndex = lineIndex;
-            while(scanIndex <= statement.index+ statement[0].length) {
+            const statementLength = Math.max(statement[0].length, 2);
+            while(scanIndex <= statement.index+ statementLength) {
                 if(text[scanIndex] === '\n') {
                     currentLine++;
                     lineIndex = scanIndex+1;
                 }
                 scanIndex++;
 
-                if(scanIndex == 1+statement.index) {
+                if(scanIndex == statement.index) {
                     startLine = currentLine;
                     startLineIndex = lineIndex;
                 }
             }
-            const offset = 1+statement.index-startLineIndex;
+            const offset = Math.max(0,statement.index-startLineIndex-1);
             const commandRange = new vscode.Range(
-                new vscode.Position(startLine, offset-1),
-                new vscode.Position(startLine, offset + statement[1].length)
+                new vscode.Position(startLine, offset),
+                new vscode.Position(startLine, offset + (statement[1] ? statement[1].length + 1: 0))
             );
-            lastCommandRange = commandRange;
             const valueRange = new vscode.Range(
-                new vscode.Position(startLine, offset + statement[1].length + 1),
-                new vscode.Position(currentLine, scanIndex-lineIndex-1)
+                new vscode.Position(startLine, offset +  (statement[1] ? statement[1].length + 2 : 0)),
+                new vscode.Position(currentLine, scanIndex-lineIndex)
             );
+
+            if(statement[4]) {
+                // error if not comment or empty line                
+                if(!/^(--.*|)$/.test(statement[4].trim()))
+                {
+                    const diagnostic = new vscode.Diagnostic(
+                        valueRange,
+                        `Line is not a valid command or comment.`,
+                        vscode.DiagnosticSeverity.Error);
+                    diagnostics.push(diagnostic);
+                }
+
+                continue;
+            }
 
             // extract command and params from statement string
             const commandName = statement[1];
             const stringPart = statement[2];
             const withoutComment = statement[3].split("--")[0].trim();
+            lastCommandRange = commandRange;
 
             let statementParams = [];
             if(stringPart) {

@@ -2084,7 +2084,7 @@ const moddingCommands = {
         "mindslime": {
             parameters : [
                 {
-                    range : [0,50]
+                    range : [0,999]
                 },
             ],
         },
@@ -4222,17 +4222,17 @@ const moddingCommands = {
                 monsterParamNoMontag
             ]
         },
-        "summonlv2" : {
+        "summonlvl2" : {
             parameters: [
                 monsterParamNoMontag
             ]
         },
-        "summonlv3" : {
+        "summonlvl3" : {
             parameters: [
                 monsterParamNoMontag
             ]
         },
-        "summonlv4" : {
+        "summonlvl4" : {
             parameters: [
                 monsterParamNoMontag
             ]
@@ -7516,6 +7516,11 @@ const moddingCommands = {
             ]
         },         
         "req_poptype": {
+            parameters : [
+                { range : [0,249] }
+            ]
+        },            
+        "req_notpoptype": {
             parameters : [
                 { range : [0,249] }
             ]

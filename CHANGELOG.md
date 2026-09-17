@@ -66,4 +66,6 @@ Added a bunch more error diagnostics. If there's a particular error that catches
  + Add an inline bitmask editor (currently supported spec, spec2, startingaff, all terrain bitmasks, custommagic)
  + Add tables for #spec, #spec2 and custommagic bitmasks
  + Fix incorrect snippet adding an #end command after #newdom
- 
+
+### [2.0.9]
+ + Report error when a line is neither a command nor comment
